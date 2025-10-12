@@ -91,7 +91,7 @@ export default function VoiceInput({ onResult, value, placeholder }: VoiceInputP
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Error de reconocimiento:', event.error);
-      setError(`Error: ${event.error}`);
+setError(`Error: ${event.error}`);
       setIsRecording(false);
     };
 

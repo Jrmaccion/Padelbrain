@@ -54,9 +54,7 @@ export default function MatchCard({ item, onPress }: MatchCardProps) {
           )}
           {!!position && (
             <View style={[styles.badge, styles.positionBadge]}>
-              <Text style={styles.badgeText}>
-                🧭 {position === 'right' ? 'Derecha' : 'Izquierda'}
-              </Text>
+              <Text style={styles.badgeText}>🧭 {position === 'right' ? 'Derecha' : 'Izquierda'}</Text>
             </View>
           )}
         </View>
