@@ -6,6 +6,7 @@ import QuickEntryForm from '@/components/quick-entry/QuickEntryForm';
 import DraftManager, { saveDraftFromForm } from '@/components/quick-entry/DraftManager';
 import { useMatches } from '@/hooks/useMatches';
 import { Match } from '@/types';
+import { useResponsive } from '@/constants/layout'; // ⬅️ NUEVO
 
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
 
@@ -13,6 +14,8 @@ export default function MatchesScreen() {
   const { items, load, add, remove } = useMatches();
   const [showForm, setShowForm] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+
+  const { deviceType, layout: responsiveLayout } = useResponsive(); // ⬅️ NUEVO
 
   useEffect(() => { load(); }, []);
 
@@ -25,7 +28,7 @@ export default function MatchesScreen() {
     await saveDraftFromForm('match', draft);
   };
 
-  const handleLoadDraft = (draft: any) => {
+  const handleLoadDraft = (_draft: any) => {
     setShowForm(true);
   };
 
@@ -34,7 +37,10 @@ export default function MatchesScreen() {
 
   const handleDelete = async () => {
     if (!selectedMatch) return;
-    const confirmed = typeof window !== 'undefined' && (window as any).confirm ? (window as any).confirm('¿Estás seguro de que quieres eliminar este partido?') : true;
+    const confirmed =
+      typeof window !== 'undefined' && (window as any).confirm
+        ? (window as any).confirm('¿Estás seguro de que quieres eliminar este partido?')
+        : true;
     if (confirmed) {
       await remove(selectedMatch.id);
       setSelectedMatch(null);
@@ -57,36 +63,45 @@ export default function MatchesScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        <DraftManager onLoadDraft={handleLoadDraft} />
+        {/* Wrapper con max-width */}
+        <View
+          style={
+            deviceType !== 'mobile'
+              ? { maxWidth: responsiveLayout.getMaxWidth(), alignSelf: 'center', width: '100%' }
+              : undefined
+          }
+        >
+          <DraftManager onLoadDraft={handleLoadDraft} />
 
-        {showForm && (
-          <View style={styles.formContainer}>
-            <QuickEntryForm type="match" onSubmit={handleSubmit} onSaveDraft={handleSaveDraft} />
-          </View>
-        )}
+          {showForm && (
+            <View style={styles.formContainer}>
+              <QuickEntryForm type="match" onSubmit={handleSubmit} onSaveDraft={handleSaveDraft} />
+            </View>
+          )}
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{items.length}</Text>
-            <Text style={styles.statLabel}>Total</Text>
+          <View style={[styles.statsContainer, deviceType !== 'mobile' && styles.statsContainerWide]}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{items.length}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+            </View>
+            <View style={[styles.statCard, styles.winCard]}>
+              <Text style={[styles.statValue, styles.winText]}>{wins}</Text>
+              <Text style={styles.statLabel}>Victorias</Text>
+            </View>
+            <View style={[styles.statCard, styles.lossCard]}>
+              <Text style={[styles.statValue, styles.lossText]}>{losses}</Text>
+              <Text style={styles.statLabel}>Derrotas</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{winRate}%</Text>
+              <Text style={styles.statLabel}>Win Rate</Text>
+            </View>
           </View>
-          <View style={[styles.statCard, styles.winCard]}>
-            <Text style={[styles.statValue, styles.winText]}>{wins}</Text>
-            <Text style={styles.statLabel}>Victorias</Text>
-          </View>
-          <View style={[styles.statCard, styles.lossCard]}>
-            <Text style={[styles.statValue, styles.lossText]}>{losses}</Text>
-            <Text style={styles.statLabel}>Derrotas</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{winRate}%</Text>
-            <Text style={styles.statLabel}>Win Rate</Text>
-          </View>
-        </View>
 
-        <View style={styles.listContainer}>
-          <Text style={styles.sectionTitle}>Historial</Text>
-          <MatchList items={items} onItemPress={handleItemPress} />
+          <View style={styles.listContainer}>
+            <Text style={styles.sectionTitle}>Historial</Text>
+            <MatchList items={items} onItemPress={handleItemPress} />
+          </View>
         </View>
       </ScrollView>
 
@@ -174,7 +189,6 @@ function MatchDetailView({ match }: { match: UIMatch }) {
         {!!match.courtType && <DetailRow icon="🏟️" label="Tipo de pista" value={match.courtType === 'interior' ? 'Interior' : 'Exterior'} />}
         {!!match.time && <DetailRow icon="⏰" label="Hora" value={match.time} />}
         {!!match.weather && <DetailRow icon="🌤️" label="Clima" value={match.weather} />}
-        {/* nuevos */}
         {!!(match as any).partner && <DetailRow icon="🧑‍🤝‍🧑" label="Compañero/a" value={(match as any).partner} />}
         {!!(match as any).position && (
           <DetailRow icon="🧭" label="Posición" value={(match as any).position === 'right' ? 'Derecha' : 'Izquierda'} />
@@ -387,6 +401,7 @@ const baseStyles = StyleSheet.create({
   weaknessText: { fontSize: 14, color: '#991B1B', fontWeight: '600' },
 } as NamedStyles<any>);
 
+// ⬅️ NUEVO
 const additionalStyles: NamedStyles<any> = {
   scoreDuration: { fontSize: 12, color: '#94A3B8', marginTop: 8 },
 
@@ -421,6 +436,9 @@ const additionalStyles: NamedStyles<any> = {
   ratingDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#E2E8F0' },
   ratingDotActive: { backgroundColor: '#3B82F6' },
   ratingValue: { fontSize: 13, fontWeight: '700', color: '#64748B', marginLeft: 8 },
+
+  // Responsive
+  statsContainerWide: { flexDirection: 'row', flexWrap: 'wrap' }, // ⬅️ NUEVO
 };
 
 const styles = { ...baseStyles, ...additionalStyles } as const;

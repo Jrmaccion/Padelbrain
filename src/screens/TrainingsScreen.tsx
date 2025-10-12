@@ -6,12 +6,15 @@ import QuickEntryForm from '@/components/quick-entry/QuickEntryForm';
 import DraftManager, { saveDraftFromForm } from '@/components/quick-entry/DraftManager';
 import { useTrainings } from '@/hooks/useTrainings';
 import { Training } from '@/types';
+import { useResponsive } from '@/constants/layout'; // ⬅️ NUEVO
 
 export default function TrainingsScreen() {
   const { items, load, add, remove } = useTrainings();
   const [showForm, setShowForm] = useState(false);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
   const [draftToLoad, setDraftToLoad] = useState<any>(null);
+
+  const { deviceType, layout: responsiveLayout } = useResponsive(); // ⬅️ NUEVO
 
   useEffect(() => {
     load();
@@ -42,8 +45,8 @@ export default function TrainingsScreen() {
   const handleDelete = async () => {
     if (!selectedTraining) return;
 
-    const confirmed = typeof window !== 'undefined' && window.confirm
-      ? window.confirm('¿Estás seguro de que quieres eliminar este entrenamiento?')
+    const confirmed = typeof window !== 'undefined' && (window as any).confirm
+      ? (window as any).confirm('¿Estás seguro de que quieres eliminar este entrenamiento?')
       : true;
 
     if (confirmed && selectedTraining) {
@@ -69,48 +72,57 @@ export default function TrainingsScreen() {
       </View>
 
       <ScrollView style={styles.content}>
-        <DraftManager onLoadDraft={handleLoadDraft} />
+        {/* Wrapper con max-width */}
+        <View
+          style={
+            deviceType !== 'mobile'
+              ? { maxWidth: responsiveLayout.getMaxWidth(), alignSelf: 'center', width: '100%' }
+              : undefined
+          }
+        >
+          <DraftManager onLoadDraft={handleLoadDraft} />
 
-        {showForm && (
-          <View style={styles.formContainer}>
-            <QuickEntryForm
-              type="training"
-              onSubmit={handleSubmit}
-              onSaveDraft={handleSaveDraft}
-            />
-          </View>
-        )}
+          {showForm && (
+            <View style={styles.formContainer}>
+              <QuickEntryForm
+                type="training"
+                onSubmit={handleSubmit}
+                onSaveDraft={handleSaveDraft}
+              />
+            </View>
+          )}
 
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{items.length}</Text>
-            <Text style={styles.statLabel}>Total</Text>
+          <View style={[styles.statsContainer, deviceType !== 'mobile' && styles.statsContainerWide]}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{items.length}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>
+                {items.filter(t => {
+                  const weekAgo = new Date();
+                  weekAgo.setDate(weekAgo.getDate() - 7);
+                  return new Date(t.date) > weekAgo;
+                }).length}
+              </Text>
+              <Text style={styles.statLabel}>Esta semana</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>
+                {items.filter(t => {
+                  const monthAgo = new Date();
+                  monthAgo.setMonth(monthAgo.getMonth() - 1);
+                  return new Date(t.date) > monthAgo;
+                }).length}
+              </Text>
+              <Text style={styles.statLabel}>Este mes</Text>
+            </View>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>
-              {items.filter(t => {
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return new Date(t.date) > weekAgo;
-              }).length}
-            </Text>
-            <Text style={styles.statLabel}>Esta semana</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>
-              {items.filter(t => {
-                const monthAgo = new Date();
-                monthAgo.setMonth(monthAgo.getMonth() - 1);
-                return new Date(t.date) > monthAgo;
-              }).length}
-            </Text>
-            <Text style={styles.statLabel}>Este mes</Text>
-          </View>
-        </View>
 
-        <View style={styles.listContainer}>
-          <Text style={styles.sectionTitle}>Historial</Text>
-          <TrainingList items={items} onItemPress={handleItemPress} />
+          <View style={styles.listContainer}>
+            <Text style={styles.sectionTitle}>Historial</Text>
+            <TrainingList items={items} onItemPress={handleItemPress} />
+          </View>
         </View>
       </ScrollView>
 
@@ -263,6 +275,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginBottom: 20
+  },
+  // ⬅️ NUEVO
+  statsContainerWide: {
+    flexDirection: 'row',
+    flexWrap: 'wrap'
   },
   statCard: {
     flex: 1,
