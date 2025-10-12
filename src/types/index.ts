@@ -1,5 +1,5 @@
 ﻿// Ajusta el path/nombre si tu archivo de tipos es otro.
-// Estos tipos son “supersets” suaves para no romper nada existente.
+// Estos tipos son "supersets" suaves para no romper nada existente.
 
 export type Rating1to5 = 1 | 2 | 3 | 4 | 5;
 
@@ -49,7 +49,7 @@ export interface Training extends BaseItem {
     technical?: Rating1to5;
     tactical?: Rating1to5;
     mental?: Rating1to5;
-    physical?: Rating1to5;
+    physical?: Rating1to5;  // ⬅️ AÑADIDO
     learned?: string;
     improveNext?: string;
   };
