@@ -6,7 +6,18 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'ESLint no configurado aún. Instalar con: npm i -D eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser' && exit 0",
+    "lint:check": "npm run lint",
+    "format": "echo 'Prettier no configurado aún. Instalar con: npm i -D prettier' && exit 0",
+    "format:check": "npm run format",
+    "test": "echo 'Jest no configurado aún. Ver informe de auditoría para setup completo' && exit 0",
+    "test:watch": "npm test",
+    "test:coverage": "npm test",
+    "validate": "npm run typecheck",
+    "clean": "rm -rf node_modules && npm install",
+    "prebuild": "npm run typecheck"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.1.3",
