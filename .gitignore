@@ -1,0 +1,50 @@
+﻿# Node / RN generales
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+
+# Builds/caches
+dist/
+build/
+coverage/
+.expo/
+.expo-shared/
+.expo-dev-client/
+.expo-web/
+web-build/
+*.jks
+.expo/*
+.expo-shared/*
+.expo/*
+
+# Metro / bundlers
+.haste/
+metro-cache/
+.expo/*
+.cache/
+.tmp/
+temp/
+
+# iOS / Android (build outputs)
+ios/Pods/
+ios/build/
+android/.gradle/
+android/app/build/
+android/build/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# SO / varios
+.DS_Store
+Thumbs.db
+
+# Env / secretos
+.env*
+!.env.example
+
+# Tests snapshots (si no quieres subirlos)
+*.snap
