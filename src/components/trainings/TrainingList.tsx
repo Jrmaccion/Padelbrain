@@ -5,9 +5,10 @@ import TrainingCard from './TrainingCard';
 interface TrainingListProps {
   items: Training[];
   onItemPress?: (item: Training) => void;
+  ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
 }
 
-export default function TrainingList({ items, onItemPress }: TrainingListProps) {
+export default function TrainingList({ items, onItemPress, ListHeaderComponent }: TrainingListProps) {
   if (items.length === 0) {
     return (
       <View style={{ padding: 20, alignItems: 'center' }}>
@@ -23,7 +24,8 @@ export default function TrainingList({ items, onItemPress }: TrainingListProps) 
       renderItem={({ item }: { item: Training }) => (
         <TrainingCard item={item} onPress={onItemPress} />
       )}
-      contentContainerStyle={{ gap: 0 }}
+      ListHeaderComponent={ListHeaderComponent}
+      contentContainerStyle={{ gap: 0, paddingHorizontal: 16 }}
     />
   );
 }

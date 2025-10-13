@@ -11,14 +11,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.padelbrain.app",
-      "newArchEnabled": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.padelbrain.app",
-      "newArchEnabled": false
+      "package": "com.padelbrain.app"
     },
     "web": {},
     "plugins": [],

@@ -9,70 +9,125 @@ interface ScoreInputProps {
 }
 
 export default function ScoreInput({ value, onChange, outcome, onOutcomeChange }: ScoreInputProps) {
-  const [sets, setSets] = useState<string[]>(['', '', '']);
   const [useKeyboard, setUseKeyboard] = useState(false);
 
-  const handleSetScore = (setIndex: number, myScore: string, oppScore: string) => {
-    const newSets = [...sets];
-    if (myScore && oppScore) {
-      newSets[setIndex] = `${myScore}-${oppScore}`;
-    } else {
-      newSets[setIndex] = '';
-    }
-    setSets(newSets);
-    
-    const finalScore = newSets.filter(s => s).join(' ');
+  // Store scores for each set as { my: string, opp: string }
+  const [setScores, setSetScores] = useState<Array<{ my: string; opp: string }>>([
+    { my: '', opp: '' },
+    { my: '', opp: '' },
+    { my: '', opp: '' }
+  ]);
+
+  const updateScore = (setIndex: number, field: 'my' | 'opp', value: string) => {
+    const newSetScores = [...setScores];
+    newSetScores[setIndex] = { ...newSetScores[setIndex], [field]: value };
+    setSetScores(newSetScores);
+
+    // Build final score string from all sets
+    const finalScore = newSetScores
+      .filter(set => set.my && set.opp)
+      .map(set => `${set.my}-${set.opp}`)
+      .join(' ');
+
     onChange(finalScore);
   };
 
-  const ScoreButton = ({ number, onPress }: { number: number; onPress: () => void }) => (
-    <TouchableOpacity style={styles.numberButton} onPress={onPress}>
-      <Text style={styles.numberText}>{number}</Text>
-    </TouchableOpacity>
-  );
-
   const SetInput = ({ setNumber }: { setNumber: number }) => {
-    const [myScore, setMyScore] = useState('');
-    const [oppScore, setOppScore] = useState('');
+    const setIndex = setNumber - 1;
+    const myScore = setScores[setIndex].my;
+    const oppScore = setScores[setIndex].opp;
+    const hasScore = myScore || oppScore;
+
+    const clearSet = () => {
+      const newSetScores = [...setScores];
+      newSetScores[setIndex] = { my: '', opp: '' };
+      setSetScores(newSetScores);
+
+      const finalScore = newSetScores
+        .filter(set => set.my && set.opp)
+        .map(set => `${set.my}-${set.opp}`)
+        .join(' ');
+      onChange(finalScore);
+    };
 
     return (
       <View style={styles.setContainer}>
-        <Text style={styles.setLabel}>Set {setNumber}</Text>
-        <View style={styles.setScores}>
-          <View style={styles.scoreColumn}>
-            <Text style={styles.scoreLabel}>Yo</Text>
-            <View style={styles.numberPad}>
-              {[0, 1, 2, 3, 4, 5, 6, 7].map(num => (
-                <ScoreButton
-                  key={num}
-                  number={num}
-                  onPress={() => {
-                    setMyScore(num.toString());
-                    handleSetScore(setNumber - 1, num.toString(), oppScore);
-                  }}
-                />
-              ))}
-            </View>
-            <Text style={styles.currentScore}>{myScore || '-'}</Text>
+        <View style={styles.setHeader}>
+          <Text style={styles.setLabel}>Set {setNumber}</Text>
+          {hasScore && (
+            <TouchableOpacity onPress={clearSet} style={styles.clearButton}>
+              <Text style={styles.clearButtonText}>✕ Limpiar</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Large score display at top - always visible above your finger */}
+        <View style={styles.scoreDisplay}>
+          <View style={styles.scoreDisplaySide}>
+            <Text style={styles.scoreDisplayLabel}>Yo</Text>
+            <Text style={[styles.scoreDisplayNumber, myScore && styles.scoreDisplayNumberActive]}>
+              {myScore || '-'}
+            </Text>
           </View>
-          
-          <Text style={styles.vs}>VS</Text>
-          
-          <View style={styles.scoreColumn}>
-            <Text style={styles.scoreLabel}>Rival</Text>
-            <View style={styles.numberPad}>
-              {[0, 1, 2, 3, 4, 5, 6, 7].map(num => (
-                <ScoreButton
+          <Text style={styles.scoreDisplayDash}>-</Text>
+          <View style={styles.scoreDisplaySide}>
+            <Text style={styles.scoreDisplayLabel}>Rival</Text>
+            <Text style={[styles.scoreDisplayNumber, oppScore && styles.scoreDisplayNumberActive]}>
+              {oppScore || '-'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Vertical selector buttons - tap from bottom, see result above */}
+        <View style={styles.selectorsRow}>
+          <View style={styles.selectorColumn}>
+            <Text style={styles.selectorColumnLabel}>Yo</Text>
+            <View style={styles.verticalSelector}>
+              {[7, 6, 5, 4, 3, 2, 1, 0].map(num => (
+                <TouchableOpacity
                   key={num}
-                  number={num}
-                  onPress={() => {
-                    setOppScore(num.toString());
-                    handleSetScore(setNumber - 1, myScore, num.toString());
-                  }}
-                />
+                  style={[
+                    styles.selectorButton,
+                    myScore === num.toString() && styles.selectorButtonActive
+                  ]}
+                  onPress={() => updateScore(setIndex, 'my', num.toString())}
+                  activeOpacity={0.6}
+                >
+                  <Text style={[
+                    styles.selectorButtonText,
+                    myScore === num.toString() && styles.selectorButtonTextActive
+                  ]}>
+                    {num}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
-            <Text style={styles.currentScore}>{oppScore || '-'}</Text>
+          </View>
+
+          <View style={styles.selectorDivider} />
+
+          <View style={styles.selectorColumn}>
+            <Text style={styles.selectorColumnLabel}>Rival</Text>
+            <View style={styles.verticalSelector}>
+              {[7, 6, 5, 4, 3, 2, 1, 0].map(num => (
+                <TouchableOpacity
+                  key={num}
+                  style={[
+                    styles.selectorButton,
+                    oppScore === num.toString() && styles.selectorButtonActive
+                  ]}
+                  onPress={() => updateScore(setIndex, 'opp', num.toString())}
+                  activeOpacity={0.6}
+                >
+                  <Text style={[
+                    styles.selectorButtonText,
+                    oppScore === num.toString() && styles.selectorButtonTextActive
+                  ]}>
+                    {num}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         </View>
       </View>
@@ -234,52 +289,110 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12
   },
+  setHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8
+  },
   setLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#475569',
-    marginBottom: 8
+    color: '#475569'
   },
-  setScores: {
+  clearButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: '#FEE2E2'
+  },
+  clearButtonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#991B1B'
+  },
+  // Large score display at top
+  scoreDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around'
+    justifyContent: 'center',
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    marginBottom: 16
   },
-  scoreColumn: {
-    alignItems: 'center'
+  scoreDisplaySide: {
+    alignItems: 'center',
+    minWidth: 80
   },
-  scoreLabel: {
+  scoreDisplayLabel: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#94A3B8',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1
+  },
+  scoreDisplayNumber: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: '#475569',
+    fontFamily: 'monospace'
+  },
+  scoreDisplayNumberActive: {
+    color: '#FFFFFF'
+  },
+  scoreDisplayDash: {
+    fontSize: 32,
+    fontWeight: '700',
     color: '#64748B',
+    marginHorizontal: 16
+  },
+
+  // Vertical selectors
+  selectorsRow: {
+    flexDirection: 'row',
+    gap: 12
+  },
+  selectorColumn: {
+    flex: 1
+  },
+  selectorColumnLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+    textAlign: 'center',
     marginBottom: 8
   },
-  numberPad: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: 120,
-    gap: 4
+  verticalSelector: {
+    gap: 6
   },
-  numberButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+  selectorButton: {
+    height: 48,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
     justifyContent: 'center',
     alignItems: 'center'
   },
-  numberText: {
-    fontSize: 12,
-    fontWeight: '600',
+  selectorButtonActive: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#2563EB'
+  },
+  selectorButtonText: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#334155'
   },
-  currentScore: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginTop: 8
+  selectorButtonTextActive: {
+    color: '#FFFFFF'
+  },
+  selectorDivider: {
+    width: 2,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 4
   },
   vs: {
     fontSize: 16,

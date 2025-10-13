@@ -6,7 +6,6 @@ import { useTrainings } from '@/hooks/useTrainings';
 import { useMatches } from '@/hooks/useMatches';
 import { useResponsive } from '@/constants/layout';
 import DateRangeExportButton from '@/components/report/DateRangeExportButton';
-import HelloPdfTestButton from '@/components/report/HelloPdfTestButton';
 
 
 interface HomeScreenProps {
@@ -203,22 +202,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           </View>
         </View>
 
-        {/* Exportación y pruebas */}
+        {/* Exportación */}
         <View style={styles.exportSection}>
           <Text style={styles.sectionTitle}>📊 Informes y Exportación</Text>
-          <View style={[
-            styles.exportGrid,
-            deviceType !== 'mobile' && styles.exportGridWide
-          ]}>
-            <DateRangeExportButton
-              matches={matches}
-              trainings={trainings}
-              defaultPreset="30d"
-              buttonStyle={styles.exportButton}
-              buttonTextStyle={styles.exportButtonText}
-            />
-            <HelloPdfTestButton />
-          </View>
+          <DateRangeExportButton
+            matches={matches}
+            trainings={trainings}
+            defaultPreset="30d"
+            buttonStyle={styles.exportButton}
+            buttonTextStyle={styles.exportButtonText}
+          />
         </View>
 
         {totalTrainings + totalMatches === 0 && (
@@ -281,9 +274,7 @@ const styles = StyleSheet.create({
   actionTitle: { fontSize: 16, fontWeight: '600', color: '#1E293B', marginBottom: 4 },
   actionSubtitle: { fontSize: 13, color: '#64748B' },
   exportSection: { padding: 20, paddingTop: 0 },
-  exportGrid: { gap: 12 },
-  exportGridWide: { flexDirection: 'row', flexWrap: 'wrap' },
-  exportButton: { backgroundColor: '#0EA5E9', borderLeftColor: '#0EA5E9', borderLeftWidth: 4, flex: 1 },
+  exportButton: { backgroundColor: '#0EA5E9', borderLeftColor: '#0EA5E9', borderLeftWidth: 4 },
   exportButtonText: { color: '#0C4A6E' },
   emptyState: { alignItems: 'center', padding: 40, marginHorizontal: 20, backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 2, borderColor: '#E2E8F0', borderStyle: 'dashed' },
   emptyIcon: { fontSize: 64, marginBottom: 16 },

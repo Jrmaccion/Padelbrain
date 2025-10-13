@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo-modules-core/ExpoModulesCore.podspec b/node_modules/expo-modules-core/ExpoModulesCore.podspec
+index 1234567..abcdefg 100644
+--- a/node_modules/expo-modules-core/ExpoModulesCore.podspec
++++ b/node_modules/expo-modules-core/ExpoModulesCore.podspec
+@@ -27,7 +27,7 @@ reactNativeTargetVersion = reactNativeVersion.split('.')[1].to_i
+ use_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
+ new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+ new_arch_compiler_flags = '-DRCT_NEW_ARCH_ENABLED'
+-compiler_flags = get_folly_config()[:compiler_flags] + ' ' + "-DREACT_NATIVE_TARGET_VERSION=#{reactNativeTargetVersion}"
++compiler_flags = "-DREACT_NATIVE_TARGET_VERSION=#{reactNativeTargetVersion}"
+
+ if use_hermes
+   compiler_flags << ' -DUSE_HERMES'

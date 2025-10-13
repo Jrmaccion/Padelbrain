@@ -1,0 +1,202 @@
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Match, Training } from '@/types';
+import { validateMatch, validateTraining } from '@/schemas/validation';
+
+interface DataState {
+  // Data
+  matches: Match[];
+  trainings: Training[];
+
+  // Loading states
+  isLoadingMatches: boolean;
+  isLoadingTrainings: boolean;
+
+  // Error states
+  matchesError: string | null;
+  trainingsError: string | null;
+
+  // Match actions
+  loadMatches: () => Promise<void>;
+  addMatch: (match: Match) => Promise<void>;
+  updateMatch: (id: string, partial: Partial<Match>) => Promise<void>;
+  removeMatch: (id: string) => Promise<void>;
+
+  // Training actions
+  loadTrainings: () => Promise<void>;
+  addTraining: (training: Training) => Promise<void>;
+  updateTraining: (id: string, partial: Partial<Training>) => Promise<void>;
+  removeTraining: (id: string) => Promise<void>;
+
+  // Utility
+  clearErrors: () => void;
+  reset: () => void;
+}
+
+// Helper to handle async operations with error handling
+const withErrorHandling = async <T,>(
+  fn: () => Promise<T>,
+  setError: (error: string | null) => void
+): Promise<T | null> => {
+  try {
+    setError(null);
+    return await fn();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    setError(message);
+    console.error('Store error:', error);
+    return null;
+  }
+};
+
+export const useDataStore = create<DataState>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      matches: [],
+      trainings: [],
+      isLoadingMatches: false,
+      isLoadingTrainings: false,
+      matchesError: null,
+      trainingsError: null,
+
+      // Match actions
+      loadMatches: async () => {
+        set({ isLoadingMatches: true });
+        await withErrorHandling(
+          async () => {
+            // Data already in store from persistence
+            set({ isLoadingMatches: false });
+          },
+          (error) => set({ matchesError: error, isLoadingMatches: false })
+        );
+      },
+
+      addMatch: async (match: Match) => {
+        await withErrorHandling(
+          async () => {
+            // Validate match data
+            const validation = validateMatch(match);
+            if (!validation.success) {
+              throw new Error(`Invalid match data: ${validation.error.message}`);
+            }
+
+            const newMatches = [...get().matches, match];
+            set({ matches: newMatches });
+          },
+          (error) => set({ matchesError: error })
+        );
+      },
+
+      updateMatch: async (id: string, partial: Partial<Match>) => {
+        await withErrorHandling(
+          async () => {
+            const matches = get().matches;
+            const index = matches.findIndex(m => m.id === id);
+
+            if (index === -1) {
+              throw new Error(`Match with ID ${id} not found`);
+            }
+
+            const updated = [...matches];
+            updated[index] = { ...updated[index], ...partial };
+            set({ matches: updated });
+          },
+          (error) => set({ matchesError: error })
+        );
+      },
+
+      removeMatch: async (id: string) => {
+        await withErrorHandling(
+          async () => {
+            const newMatches = get().matches.filter(m => m.id !== id);
+            set({ matches: newMatches });
+          },
+          (error) => set({ matchesError: error })
+        );
+      },
+
+      // Training actions
+      loadTrainings: async () => {
+        set({ isLoadingTrainings: true });
+        await withErrorHandling(
+          async () => {
+            // Data already in store from persistence
+            set({ isLoadingTrainings: false });
+          },
+          (error) => set({ trainingsError: error, isLoadingTrainings: false })
+        );
+      },
+
+      addTraining: async (training: Training) => {
+        await withErrorHandling(
+          async () => {
+            // Validate training data
+            const validation = validateTraining(training);
+            if (!validation.success) {
+              throw new Error(`Invalid training data: ${validation.error.message}`);
+            }
+
+            const newTrainings = [...get().trainings, training];
+            set({ trainings: newTrainings });
+          },
+          (error) => set({ trainingsError: error })
+        );
+      },
+
+      updateTraining: async (id: string, partial: Partial<Training>) => {
+        await withErrorHandling(
+          async () => {
+            const trainings = get().trainings;
+            const index = trainings.findIndex(t => t.id === id);
+
+            if (index === -1) {
+              throw new Error(`Training with ID ${id} not found`);
+            }
+
+            const updated = [...trainings];
+            updated[index] = { ...updated[index], ...partial };
+            set({ trainings: updated });
+          },
+          (error) => set({ trainingsError: error })
+        );
+      },
+
+      removeTraining: async (id: string) => {
+        await withErrorHandling(
+          async () => {
+            const newTrainings = get().trainings.filter(t => t.id !== id);
+            set({ trainings: newTrainings });
+          },
+          (error) => set({ trainingsError: error })
+        );
+      },
+
+      // Utility
+      clearErrors: () => {
+        set({ matchesError: null, trainingsError: null });
+      },
+
+      reset: () => {
+        set({
+          matches: [],
+          trainings: [],
+          isLoadingMatches: false,
+          isLoadingTrainings: false,
+          matchesError: null,
+          trainingsError: null,
+        });
+      },
+    }),
+    {
+      name: 'padelbrain-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      // Only persist data, not loading/error states
+      partialize: (state) => ({
+        matches: state.matches,
+        trainings: state.trainings,
+      }),
+    }
+  )
+);

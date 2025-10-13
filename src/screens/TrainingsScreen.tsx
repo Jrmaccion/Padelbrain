@@ -4,25 +4,36 @@ import Header from '@/components/common/Header';
 import TrainingList from '@/components/trainings/TrainingList';
 import QuickEntryForm from '@/components/quick-entry/QuickEntryForm';
 import DraftManager, { saveDraftFromForm } from '@/components/quick-entry/DraftManager';
-import { useTrainings } from '@/hooks/useTrainings';
+import { useDataStore } from '@/store/useDataStore';
 import { Training } from '@/types';
-import { useResponsive } from '@/constants/layout'; // ⬅️ NUEVO
+import { useResponsive } from '@/constants/layout';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 export default function TrainingsScreen() {
-  const { items, load, add, remove } = useTrainings();
+  const {
+    trainings: items,
+    isLoadingTrainings,
+    trainingsError,
+    loadTrainings: load,
+    addTraining: add,
+    removeTraining: remove,
+    clearErrors
+  } = useDataStore();
   const [showForm, setShowForm] = useState(false);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
   const [draftToLoad, setDraftToLoad] = useState<any>(null);
 
-  const { deviceType, layout: responsiveLayout } = useResponsive(); // ⬅️ NUEVO
+  const { deviceType, layout: responsiveLayout } = useResponsive();
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const handleSubmit = async (training: Training) => {
     await add(training);
-    setShowForm(false);
+    if (!trainingsError) {
+      setShowForm(false);
+    }
   };
 
   const handleSaveDraft = async (draft: Partial<Training>) => {
@@ -30,7 +41,7 @@ export default function TrainingsScreen() {
   };
 
   const handleLoadDraft = (draft: any) => {
-    setDraftToLoad(draft);
+    setDraftToLoad(draft.data);
     setShowForm(true);
   };
 
@@ -51,14 +62,35 @@ export default function TrainingsScreen() {
 
     if (confirmed && selectedTraining) {
       await remove(selectedTraining.id);
-      setSelectedTraining(null);
-      await load(); // Recargar lista
+      if (!trainingsError) {
+        setSelectedTraining(null);
+      }
     }
   };
+
+  // Show loading spinner on initial load
+  if (isLoadingTrainings && items.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Header title="Entrenamientos" />
+        <LoadingSpinner message="Cargando entrenamientos..." />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Header title="Entrenamientos" />
+
+      {/* Error message */}
+      {trainingsError && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>⚠️ {trainingsError}</Text>
+          <TouchableOpacity onPress={clearErrors} style={styles.errorDismiss}>
+            <Text style={styles.errorDismissText}>✕</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       
       <View style={styles.headerActions}>
         <TouchableOpacity
@@ -71,60 +103,63 @@ export default function TrainingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Wrapper con max-width */}
-        <View
-          style={
-            deviceType !== 'mobile'
-              ? { maxWidth: responsiveLayout.getMaxWidth(), alignSelf: 'center', width: '100%' }
-              : undefined
+      <View style={styles.content}>
+        <TrainingList
+          items={items}
+          onItemPress={handleItemPress}
+          ListHeaderComponent={
+            <View
+              style={
+                deviceType !== 'mobile'
+                  ? { maxWidth: responsiveLayout.getMaxWidth(), alignSelf: 'center', width: '100%' }
+                  : undefined
+              }
+            >
+              <DraftManager onLoadDraft={handleLoadDraft} />
+
+              {showForm && (
+                <View style={styles.formContainer}>
+                  <QuickEntryForm
+                    type="training"
+                    onSubmit={handleSubmit}
+                    onSaveDraft={handleSaveDraft}
+                    draftData={draftToLoad}
+                  />
+                </View>
+              )}
+
+              <View style={[styles.statsContainer, deviceType !== 'mobile' && styles.statsContainerWide]}>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>{items.length}</Text>
+                  <Text style={styles.statLabel}>Total</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>
+                    {items.filter(t => {
+                      const weekAgo = new Date();
+                      weekAgo.setDate(weekAgo.getDate() - 7);
+                      return new Date(t.date) > weekAgo;
+                    }).length}
+                  </Text>
+                  <Text style={styles.statLabel}>Esta semana</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={styles.statValue}>
+                    {items.filter(t => {
+                      const monthAgo = new Date();
+                      monthAgo.setMonth(monthAgo.getMonth() - 1);
+                      return new Date(t.date) > monthAgo;
+                    }).length}
+                  </Text>
+                  <Text style={styles.statLabel}>Este mes</Text>
+                </View>
+              </View>
+
+              <Text style={styles.sectionTitle}>Historial</Text>
+            </View>
           }
-        >
-          <DraftManager onLoadDraft={handleLoadDraft} />
-
-          {showForm && (
-            <View style={styles.formContainer}>
-              <QuickEntryForm
-                type="training"
-                onSubmit={handleSubmit}
-                onSaveDraft={handleSaveDraft}
-              />
-            </View>
-          )}
-
-          <View style={[styles.statsContainer, deviceType !== 'mobile' && styles.statsContainerWide]}>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>{items.length}</Text>
-              <Text style={styles.statLabel}>Total</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {items.filter(t => {
-                  const weekAgo = new Date();
-                  weekAgo.setDate(weekAgo.getDate() - 7);
-                  return new Date(t.date) > weekAgo;
-                }).length}
-              </Text>
-              <Text style={styles.statLabel}>Esta semana</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statValue}>
-                {items.filter(t => {
-                  const monthAgo = new Date();
-                  monthAgo.setMonth(monthAgo.getMonth() - 1);
-                  return new Date(t.date) > monthAgo;
-                }).length}
-              </Text>
-              <Text style={styles.statLabel}>Este mes</Text>
-            </View>
-          </View>
-
-          <View style={styles.listContainer}>
-            <Text style={styles.sectionTitle}>Historial</Text>
-            <TrainingList items={items} onItemPress={handleItemPress} />
-          </View>
-        </View>
-      </ScrollView>
+        />
+      </View>
 
       {/* Modal de detalle */}
       <Modal
@@ -244,6 +279,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC'
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FCA5A5'
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#991B1B',
+    fontWeight: '600',
+    flex: 1
+  },
+  errorDismiss: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FCA5A5',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  errorDismissText: {
+    fontSize: 16,
+    color: '#7F1D1D',
+    fontWeight: '700'
   },
   headerActions: {
     paddingHorizontal: 16,

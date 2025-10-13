@@ -20,11 +20,12 @@
       "android": { "resourceClass": "default" }
     },
     "simulator": {
+      "developmentClient": true,
       "distribution": "internal",
       "ios": {
         "simulator": true,
         "resourceClass": "default",
-        "cocoapods": "1.15.2"
+        "image": "latest"
       },
       "env": {
         "EXPO_IOS_VERBOSE_POD_INSTALL": "1",

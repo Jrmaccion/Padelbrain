@@ -17,6 +17,7 @@ interface QuickEntryFormProps {
   type: 'training' | 'match';
   onSubmit: (item: Training | Match) => void;
   onSaveDraft?: (item: Partial<Training | Match>) => void;
+  draftData?: Partial<Training | Match>;
 }
 
 interface LastSelections {
@@ -54,7 +55,7 @@ const QUICK_TEMPLATES: QuickTemplate[] = [
   },
 ];
 
-export default function QuickEntryForm({ type, onSubmit, onSaveDraft }: QuickEntryFormProps) {
+export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData }: QuickEntryFormProps) {
   // Básicos
   const [date, setDate] = useState(new Date().toISOString());
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
@@ -103,6 +104,13 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft }: QuickEnt
     loadLastSelections();
   }, []);
 
+  // Load draft data if provided
+  useEffect(() => {
+    if (draftData) {
+      loadDraftIntoForm(draftData);
+    }
+  }, [draftData]);
+
   const loadLastSelections = async () => {
     const last = await getItem<LastSelections>('lastSelections');
     if (!last) return;
@@ -115,6 +123,56 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft }: QuickEnt
       setTournament(last.tournament || '');
       setPartner(last.partner || '');
       if (last.position) setPosition(last.position);
+    }
+  };
+
+  const loadDraftIntoForm = (draft: Partial<Training | Match>) => {
+    // Load base fields
+    if (draft.date) setDate(draft.date);
+    if (draft.location) setLocation(draft.location);
+    if (draft.sleep) setSleep(draft.sleep);
+    if (draft.energy) setEnergy(draft.energy);
+    if (draft.nutrition) setNutrition(draft.nutrition);
+    if (draft.health) setHealth(draft.health);
+    if (draft.stress) setStress(draft.stress);
+    if (draft.notes) setVoiceSummary(draft.notes);
+
+    if (type === 'training') {
+      const trainingDraft = draft as Partial<Training>;
+      if (trainingDraft.coach) setCoach(trainingDraft.coach);
+      if (trainingDraft.goals) setGoals(trainingDraft.goals);
+      if (trainingDraft.trainingPartners) setTrainingPartners(trainingDraft.trainingPartners);
+      if (trainingDraft.postReview) {
+        if (trainingDraft.postReview.technical) setTechnical(trainingDraft.postReview.technical * 20);
+        if (trainingDraft.postReview.tactical) setTactical(trainingDraft.postReview.tactical * 20);
+        if (trainingDraft.postReview.mental) setMental(trainingDraft.postReview.mental * 20);
+        if (trainingDraft.postReview.physical) setPhysical(trainingDraft.postReview.physical * 20);
+        if (trainingDraft.postReview.learned) setLearned(trainingDraft.postReview.learned);
+        if (trainingDraft.postReview.improveNext) setDiffNextTime(trainingDraft.postReview.improveNext);
+      }
+    } else {
+      const matchDraft = draft as Partial<Match>;
+      if (matchDraft.tournament) setTournament(matchDraft.tournament);
+      if (matchDraft.opponents) setOpponents(matchDraft.opponents);
+      if (matchDraft.partner) setPartner(matchDraft.partner);
+      if (matchDraft.position) setPosition(matchDraft.position);
+      if (matchDraft.result) {
+        if (matchDraft.result.outcome) setOutcome(matchDraft.result.outcome);
+        if (matchDraft.result.score) setScore(matchDraft.result.score);
+      }
+      if (matchDraft.strengths) setStrengths(matchDraft.strengths);
+      if (matchDraft.weaknesses) setWeaknesses(matchDraft.weaknesses);
+      if (matchDraft.keywords) setKeywords(matchDraft.keywords);
+      if (matchDraft.ratings) {
+        if (matchDraft.ratings.technical) setTechnical(matchDraft.ratings.technical * 20);
+        if (matchDraft.ratings.tactical) setTactical(matchDraft.ratings.tactical * 20);
+        if (matchDraft.ratings.mental) setMental(matchDraft.ratings.mental * 20);
+        if (matchDraft.ratings.physical) setPhysical(matchDraft.ratings.physical * 20);
+      }
+      if (matchDraft.reflections) {
+        if (matchDraft.reflections.learned) setLearned(matchDraft.reflections.learned);
+        if (matchDraft.reflections.diffNextTime) setDiffNextTime(matchDraft.reflections.diffNextTime);
+      }
     }
   };
 

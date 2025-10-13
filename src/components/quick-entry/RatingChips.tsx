@@ -51,7 +51,7 @@ export default function RatingChips({ label, value, onChange }: RatingChipsProps
           </TouchableOpacity>
         ))}
       </View>
-      {value && (
+      {!!value && (
         <Text style={styles.ratingLabel}>{RATING_LABELS[value]}</Text>
       )}
     </View>

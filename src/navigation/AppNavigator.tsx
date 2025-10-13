@@ -4,13 +4,12 @@ import HomeScreen from '@/screens/HomeScreen';
 import TrainingsScreen from '@/screens/TrainingsScreen';
 import MatchesScreen from '@/screens/MatchesScreen';
 import StatsScreen from '@/screens/StatsScreen';
-import AIAssistantScreen from '@/screens/AIAssistantScreen';
 import { useResponsive } from '@/constants/layout';
 import Tooltip from '@/components/common/Tooltip';
 import Badge from '@/components/common/Badge';
 import ReportsScreen from '@/screens/ReportsScreen';
 
-type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'AI' | 'Reports';
+type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'Reports';
 
 interface TabConfig {
   id: Route;
@@ -116,7 +115,7 @@ export default function AppNavigator() {
         <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
           <Text style={iconStyle}>{tab.icon}</Text>
           {/* Badge en esquina superior derecha del icono */}
-          {(badgeValue && badgeValue > 0) && (
+          {!!badgeValue && badgeValue > 0 && (
             <Badge value={badgeValue} style={styles.iconBadge} />
           )}
         </View>

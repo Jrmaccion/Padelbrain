@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo/Expo.podspec b/node_modules/expo/Expo.podspec
+index 1234567..abcdefg 100644
+--- a/node_modules/expo/Expo.podspec
++++ b/node_modules/expo/Expo.podspec
+@@ -18,7 +18,7 @@ end
+
+ reactNativeTargetVersion = reactNativeVersion.split('.')[1].to_i
+
+-compiler_flags = get_folly_config()[:compiler_flags]
++compiler_flags = []
+
+ package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
+

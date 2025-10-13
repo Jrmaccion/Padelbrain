@@ -26,12 +26,9 @@ metro-cache/
 .tmp/
 temp/
 
-# iOS / Android (build outputs)
-ios/Pods/
-ios/build/
-android/.gradle/
-android/app/build/
-android/build/
+# iOS / Android (build outputs + native folders for CNG/Prebuild)
+ios/
+android/
 
 # IDE
 .vscode/
