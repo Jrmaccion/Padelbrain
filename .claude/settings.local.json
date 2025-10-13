@@ -10,7 +10,9 @@
       "Bash(npm uninstall:*)",
       "Bash(npm start:*)",
       "Bash(npm view:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(npx expo start:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

@@ -43,7 +43,7 @@
       },
       "android": {
         "resourceClass": "medium",
-        "buildType": "aab",
+        "buildType": "app-bundle",
         "autoIncrement": "versionCode"
       },
       "channel": "production",
@@ -63,7 +63,7 @@
       "extends": "production",
       "android": {
         "resourceClass": "medium",
-        "buildType": "aab",
+        "buildType": "app-bundle",
         "autoIncrement": "versionCode"
       }
     }

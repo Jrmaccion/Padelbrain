@@ -40,6 +40,8 @@
       },
       "permissions": [
         "RECORD_AUDIO",
+        "INTERNET",
+        "RECORD_AUDIO",
         "INTERNET"
       ]
     },
@@ -84,6 +86,12 @@
     },
     "hooks": {
       "postPublish": []
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ac33327e-e993-4cd7-9c11-42deeca171af"
     }
   }
 }

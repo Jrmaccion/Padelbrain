@@ -10,6 +10,9 @@ config.resolver.blockList = [
   /node_modules\/electron-builder\/.*/,
 ];
 
+// Configure source extensions
+config.resolver.sourceExts = ['js', 'jsx', 'json', 'ts', 'tsx', 'cjs', 'mjs'];
+
 // Custom resolver to completely block electron imports on web
 const defaultResolver = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
