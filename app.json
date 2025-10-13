@@ -1,32 +1,34 @@
-﻿{
+{
   "expo": {
     "name": "PadelBrain",
     "slug": "padelbrain",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.padelbrain.app"
+      "bundleIdentifier": "com.padelbrain.app",
+      "newArchEnabled": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.padelbrain.app"
+      "package": "com.padelbrain.app",
+      "newArchEnabled": false
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "web": {},
+    "plugins": [],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ac33327e-e993-4cd7-9c11-42deeca171af"
+      }
     }
   }
 }

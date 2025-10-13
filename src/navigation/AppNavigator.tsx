@@ -8,8 +8,9 @@ import AIAssistantScreen from '@/screens/AIAssistantScreen';
 import { useResponsive } from '@/constants/layout';
 import Tooltip from '@/components/common/Tooltip';
 import Badge from '@/components/common/Badge';
+import ReportsScreen from '@/screens/ReportsScreen';
 
-type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'AI';
+type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'AI' | 'Reports';
 
 interface TabConfig {
   id: Route;
@@ -25,6 +26,7 @@ const tabs: TabConfig[] = [
   { id: 'Matches',   label: 'Partidos',   icon: '🎾', tooltip: 'Partidos' },
   { id: 'Stats',     label: 'Stats',      icon: '📊', tooltip: 'Estadísticas', badgeKey: 'statsAlerts' },
   { id: 'AI',        label: 'IA',         icon: '🤖', tooltip: 'Asistente IA', badgeKey: 'aiUnread' },
+  { id: 'Reports',   label: 'Informes',   icon: '🧾', tooltip: 'Exportar/Informes' },
 ];
 
 export default function AppNavigator() {
@@ -41,7 +43,7 @@ export default function AppNavigator() {
     if (Platform.OS !== 'web') return;
     const handler = (e: KeyboardEvent) => {
       const map: Record<string, Route> = {
-        '1': 'Home', '2': 'Trainings', '3': 'Matches', '4': 'Stats', '5': 'AI'
+        '1': 'Home', '2': 'Trainings', '3': 'Matches', '4': 'Stats', '5': 'AI', '6': 'Reports'
       };
       if (map[e.key]) setRoute(map[e.key]);
     };
@@ -64,6 +66,7 @@ export default function AppNavigator() {
       case 'Matches':   return <MatchesScreen />;
       case 'Stats':     return <StatsScreen />;
       case 'AI':        return <AIAssistantScreen />;
+      case 'Reports':   return <ReportsScreen />;
       default:          return <HomeScreen navigation={nav} />;
     }
   };

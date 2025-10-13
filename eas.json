@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">=13.2.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": { "resourceClass": "default" },
+      "android": { "resourceClass": "default" }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": { "resourceClass": "default" },
+      "android": { "resourceClass": "default" }
+    },
+    "production": {
+      "ios": { "resourceClass": "default" },
+      "android": { "resourceClass": "default" }
+    },
+    "simulator": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true,
+        "resourceClass": "default",
+        "cocoapods": "1.15.2"
+      },
+      "env": {
+        "EXPO_IOS_VERBOSE_POD_INSTALL": "1",
+        "EXPO_DEBUG": "1"
+      }
+    }
+  },
+  "submit": { "production": {} }
+}

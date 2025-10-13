@@ -1,9 +1,13 @@
-﻿import { useEffect, useState } from 'react';
+﻿// src/screens/HomeScreen.tsx
+import { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import Header from '@/components/common/Header';
 import { useTrainings } from '@/hooks/useTrainings';
 import { useMatches } from '@/hooks/useMatches';
-import { useResponsive } from '@/constants/layout'; // ⬅️ NUEVO
+import { useResponsive } from '@/constants/layout';
+import DateRangeExportButton from '@/components/report/DateRangeExportButton';
+import HelloPdfTestButton from '@/components/report/HelloPdfTestButton';
+
 
 interface HomeScreenProps {
   navigation: {
@@ -14,7 +18,7 @@ interface HomeScreenProps {
 export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { items: trainings, load: loadTrainings } = useTrainings();
   const { items: matches, load: loadMatches } = useMatches();
-  const { deviceType, layout: responsiveLayout } = useResponsive(); // ⬅️ NUEVO
+  const { deviceType, layout: responsiveLayout } = useResponsive();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -43,7 +47,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const lastTraining = trainings[0];
   const lastMatch = matches[0];
 
-  const quickActions = [
+  const quickActions: Array<{
+    id: 'training' | 'match' | 'stats' | 'ai';
+    title: string;
+    subtitle: string;
+    color: string;
+    route: string;
+  }> = [
     { id: 'training', title: '🏃 Nuevo Entrenamiento', subtitle: 'Registra tu sesión', color: '#3B82F6', route: 'Trainings' },
     { id: 'match', title: '🎾 Nuevo Partido', subtitle: 'Guarda el resultado', color: '#8B5CF6', route: 'Matches' },
     { id: 'stats', title: '📊 Ver Estadísticas', subtitle: 'Analiza tu progreso', color: '#10B981', route: 'Stats' },
@@ -104,7 +114,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           </View>
         </View>
 
-        {/* Actividad reciente - Grid en desktop/tablet */}
+        {/* Actividad reciente */}
         {(lastTraining || lastMatch) && (
           <View style={styles.recentSection}>
             <Text style={styles.sectionTitle}>🕐 Actividad Reciente</Text>
@@ -168,7 +178,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           </View>
         )}
 
-        {/* Acciones rápidas - Grid en desktop/tablet */}
+        {/* Acciones rápidas */}
         <View style={styles.actionsSection}>
           <Text style={styles.sectionTitle}>⚡ Acciones Rápidas</Text>
           <View style={[
@@ -190,6 +200,24 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </View>
+
+        {/* Exportación y pruebas */}
+        <View style={styles.exportSection}>
+          <Text style={styles.sectionTitle}>📊 Informes y Exportación</Text>
+          <View style={[
+            styles.exportGrid,
+            deviceType !== 'mobile' && styles.exportGridWide
+          ]}>
+            <DateRangeExportButton
+              matches={matches}
+              trainings={trainings}
+              defaultPreset="30d"
+              buttonStyle={styles.exportButton}
+              buttonTextStyle={styles.exportButtonText}
+            />
+            <HelloPdfTestButton />
           </View>
         </View>
 
@@ -229,16 +257,16 @@ const styles = StyleSheet.create({
   statsSection: { padding: 20 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1E293B', marginBottom: 12 },
   statsGrid: { gap: 12 },
-  statsGridWide: { flexDirection: 'row', flexWrap: 'wrap' }, // ⬅️ NUEVO
+  statsGridWide: { flexDirection: 'row', flexWrap: 'wrap' },
   statCard: { flex: 1, minWidth: 200, padding: 16, borderRadius: 12, alignItems: 'center', minHeight: 100, justifyContent: 'center' },
   statValue: { fontSize: 32, fontWeight: '700', marginBottom: 4 },
   statLabel: { fontSize: 12, color: '#64748B', fontWeight: '600', textAlign: 'center' },
   statBadge: { fontSize: 10, color: '#64748B', marginTop: 4, fontWeight: '500' },
   recentSection: { padding: 20, paddingTop: 0 },
   recentGrid: { gap: 12 },
-  recentGridWide: { flexDirection: 'row', flexWrap: 'wrap' }, // ⬅️ NUEVO
+  recentGridWide: { flexDirection: 'row', flexWrap: 'wrap' },
   recentCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#E2E8F0' },
-  recentCardWide: { flex: 1, minWidth: 400 }, // ⬅️ NUEVO
+  recentCardWide: { flex: 1, minWidth: 400 },
   recentIconContainer: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   recentIcon: { fontSize: 24 },
   recentContent: { flex: 1, justifyContent: 'center' },
@@ -247,11 +275,16 @@ const styles = StyleSheet.create({
   recentDetail: { fontSize: 12, color: '#94A3B8' },
   actionsSection: { padding: 20, paddingTop: 0 },
   actionsGrid: { gap: 12 },
-  actionsGridWide: { flexDirection: 'row', flexWrap: 'wrap' }, // ⬅️ NUEVO
+  actionsGridWide: { flexDirection: 'row', flexWrap: 'wrap' },
   actionCard: { backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, borderLeftWidth: 4, borderWidth: 1, borderColor: '#E2E8F0' },
-  actionCardWide: { flex: 1, minWidth: 250 }, // ⬅️ NUEVO
+  actionCardWide: { flex: 1, minWidth: 250 },
   actionTitle: { fontSize: 16, fontWeight: '600', color: '#1E293B', marginBottom: 4 },
   actionSubtitle: { fontSize: 13, color: '#64748B' },
+  exportSection: { padding: 20, paddingTop: 0 },
+  exportGrid: { gap: 12 },
+  exportGridWide: { flexDirection: 'row', flexWrap: 'wrap' },
+  exportButton: { backgroundColor: '#0EA5E9', borderLeftColor: '#0EA5E9', borderLeftWidth: 4, flex: 1 },
+  exportButtonText: { color: '#0C4A6E' },
   emptyState: { alignItems: 'center', padding: 40, marginHorizontal: 20, backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 2, borderColor: '#E2E8F0', borderStyle: 'dashed' },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
   emptyTitle: { fontSize: 20, fontWeight: '700', color: '#1E293B', marginBottom: 8, textAlign: 'center' },
