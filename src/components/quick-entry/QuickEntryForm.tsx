@@ -10,7 +10,6 @@ import RatingChips from './RatingChips';
 import PerformanceSliders from './PerformanceSliders';
 import VoiceInput from './VoiceInput';
 import ScoreInput from './ScoreInput';
-import AIAnalysis from './AIAnalysis';
 import QuickPeopleSelector from './QuickPeopleSelector';
 
 interface QuickEntryFormProps {
@@ -94,7 +93,6 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
   const [learned, setLearned] = useState('');
   const [diffNextTime, setDiffNextTime] = useState('');
   const [keywords, setKeywords] = useState<string[]>([]);
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
 
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -198,39 +196,40 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
 
   const handleVoiceResult = (text: string) => {
     setVoiceSummary(text);
-    processVoiceWithAI(text);
+    processVoiceInput(text);
   };
 
-  const processVoiceWithAI = (text: string) => {
+  // Simple pattern matching to extract useful info from voice input
+  const processVoiceInput = (text: string) => {
     const lower = text.toLowerCase();
 
-    // score
+    // Extract score for matches
     const scoreMatch = text.match(/(\d+[-–]\d+(?:\s+\d+[-–]\d+)*)/);
     if (scoreMatch && type === 'match') setScore(scoreMatch[1]);
 
-    // outcome
+    // Extract outcome keywords
     if (lower.includes('gané') || lower.includes('victoria')) setOutcome('won');
     else if (lower.includes('perdí') || lower.includes('derrota')) setOutcome('lost');
 
-    // strengths/weaknesses ejemplo
+    // Extract strengths from common keywords
     const s: string[] = [];
     if (lower.includes('saque')) s.push('Saque');
     if (lower.includes('revés') || lower.includes('backhand')) s.push('Revés');
     if (lower.includes('volea')) s.push('Volea');
-    setStrengths(s);
+    if (s.length > 0) setStrengths(s);
 
+    // Extract weaknesses from negative context
     const weakKeys = ['mal', 'débil', 'fallar', 'mejorar'];
     const w: string[] = [];
     if (lower.includes('derecha') && weakKeys.some((k) => lower.includes(k))) w.push('Derecha inconsistente');
-    setWeaknesses(w);
+    if (w.length > 0) setWeaknesses(w);
 
-    setAiSuggestions([
-      'Practicar devoluciones cortas en próximo entrenamiento',
-      'Trabajar transición defensa-ataque',
-      'Incluir ejercicios de resistencia específica',
-    ]);
-
-    setKeywords(['Saque', 'Fondo de pista', 'Resistencia']);
+    // Extract general keywords
+    const kw: string[] = [];
+    if (lower.includes('saque')) kw.push('Saque');
+    if (lower.includes('fondo')) kw.push('Fondo de pista');
+    if (lower.includes('resistencia')) kw.push('Resistencia');
+    if (kw.length > 0) setKeywords(kw);
   };
 
   const saveDraft = () => {
@@ -290,6 +289,7 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
           technical: Math.round(technical / 20) as Rating1to5,
           tactical: Math.round(tactical / 20) as Rating1to5,
           mental: Math.round(mental / 20) as Rating1to5,
+          physical: Math.round(physical / 20) as Rating1to5,
           learned: learned || undefined,
           improveNext: diffNextTime || undefined,
         },
@@ -305,10 +305,10 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
         result: { outcome, score: score || undefined },
         strengths: strengths.length ? strengths : undefined,
         weaknesses: weaknesses.length ? weaknesses : undefined,
-        reflections: {
+        reflections: (learned || diffNextTime) ? {
           diffNextTime: diffNextTime || undefined,
           learned: learned || undefined,
-        },
+        } : undefined,
         ratings: {
           technical: Math.round(technical / 20) as Rating1to5,
           tactical: Math.round(tactical / 20) as Rating1to5,
@@ -346,7 +346,6 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
     setLearned('');
     setDiffNextTime('');
     setKeywords([]);
-    setAiSuggestions([]);
     setSelectedTemplate(null);
     setPartner('');
     setPosition('right');
@@ -499,21 +498,6 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
           <Text style={styles.sectionTitle}>🎤 Resumen por Voz</Text>
           <VoiceInput onResult={handleVoiceResult} value={voiceSummary} placeholder="Toca el micrófono y cuenta qué tal fue..." />
         </View>
-
-        {/* Análisis IA */}
-        {(aiSuggestions.length > 0 || strengths.length > 0 || weaknesses.length > 0) && (
-          <AIAnalysis
-            strengths={strengths}
-            weaknesses={weaknesses}
-            suggestions={aiSuggestions}
-            keywords={keywords}
-            onKeywordsChange={setKeywords}
-            learned={learned}
-            onLearnedChange={setLearned}
-            diffNextTime={diffNextTime}
-            onDiffNextTimeChange={setDiffNextTime}
-          />
-        )}
 
         {/* Avanzadas */}
         <TouchableOpacity onPress={() => setShowAdvanced(!showAdvanced)} style={styles.advancedToggle}>

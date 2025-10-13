@@ -47,7 +47,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const lastMatch = matches[0];
 
   const quickActions: Array<{
-    id: 'training' | 'match' | 'stats' | 'ai';
+    id: 'training' | 'match' | 'stats' | 'reports';
     title: string;
     subtitle: string;
     color: string;
@@ -56,7 +56,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     { id: 'training', title: '🏃 Nuevo Entrenamiento', subtitle: 'Registra tu sesión', color: '#3B82F6', route: 'Trainings' },
     { id: 'match', title: '🎾 Nuevo Partido', subtitle: 'Guarda el resultado', color: '#8B5CF6', route: 'Matches' },
     { id: 'stats', title: '📊 Ver Estadísticas', subtitle: 'Analiza tu progreso', color: '#10B981', route: 'Stats' },
-    { id: 'ai', title: '🤖 Asistente IA', subtitle: 'Obtén recomendaciones', color: '#F59E0B', route: 'AI' }
+    { id: 'reports', title: '🧾 Ver Informes', subtitle: 'Exporta tus datos', color: '#0EA5E9', route: 'Reports' }
   ];
 
   return (

@@ -4,22 +4,76 @@
     "slug": "padelbrain",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "padelbrain",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#3B82F6"
+    },
     "assetBundlePatterns": [
-      "**/*"
+      "assets/**/*"
     ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.padelbrain.app",
+      "buildNumber": "1",
+      "icon": "./assets/ios-icon.png",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "PadelBrain necesita acceso al micrófono para permitir el registro de entrenamientos y partidos por voz.",
+        "NSSpeechRecognitionUsageDescription": "PadelBrain usa reconocimiento de voz para facilitar la entrada rápida de datos sobre tus sesiones de pádel.",
+        "UIBackgroundModes": []
+      },
+      "config": {
+        "usesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.padelbrain.app"
+      "package": "com.padelbrain.app",
+      "versionCode": 1,
+      "icon": "./assets/android-icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#3B82F6"
+      },
+      "permissions": [
+        "RECORD_AUDIO",
+        "INTERNET"
+      ]
     },
-    "web": {},
-    "plugins": [],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "PadelBrain",
+      "shortName": "PadelBrain",
+      "description": "Track your padel training and matches with intelligent analysis",
+      "themeColor": "#3B82F6",
+      "backgroundColor": "#F8FAFC",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/",
+      "scope": "/",
+      "lang": "es",
+      "dir": "ltr"
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          },
+          "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "minSdkVersion": 23
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": false
     },
@@ -27,6 +81,9 @@
       "eas": {
         "projectId": "ac33327e-e993-4cd7-9c11-42deeca171af"
       }
+    },
+    "hooks": {
+      "postPublish": []
     }
   }
 }

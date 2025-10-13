@@ -45,3 +45,32 @@ Thumbs.db
 
 # Tests snapshots (si no quieres subirlos)
 *.snap
+
+# Electron / Desktop builds
+dist-electron/
+electron-dist/
+release/
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.rpm
+
+# Mobile builds
+*.aab
+*.apk
+*.ipa
+*.app
+
+# Credentials (NEVER COMMIT)
+*.p12
+*.cer
+*.mobileprovision
+*.certSigningRequest
+android-service-account.json
+*.json.key
+
+# Logs
+*.log
+npm-debug.*
+yarn-debug.*

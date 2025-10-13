@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PadelBrain is a React Native (Expo) app for tracking padel training sessions and matches with AI-powered analysis. Built with TypeScript, it runs on iOS, Android, and Web platforms using a single codebase.
+PadelBrain is a React Native (Expo) app for tracking padel training sessions and matches. Built with TypeScript, it runs on iOS, Android, and Web platforms using a single codebase.
 
 ## Commands
 
@@ -65,8 +65,8 @@ Recent additions:
   - Mobile (<768px): Bottom tab bar with icons and labels
   - Tablet/Desktop (768-1100px): Side rail navigation with brand and tooltips
   - Wide Desktop (≥1100px): Top horizontal bar navigation
-- Keyboard shortcuts on web: keys 1-6 switch tabs
-- Supports badges for notifications (e.g., AI unread count)
+- Keyboard shortcuts on web: keys 1-5 switch tabs
+- Supports badges for notifications (e.g., stats alerts)
 
 **Responsive Utilities** (`src/constants/layout.ts`):
 - `useResponsive()` hook provides `deviceType`, `isMobile`, `isTablet`, `isDesktop`
@@ -83,10 +83,10 @@ import { getItem } from '@/services/storage';
 
 **Component Organization**:
 - `src/components/common/`: Reusable UI primitives (Button, Input, Card, Badge, Tooltip)
-- `src/components/quick-entry/`: Multi-step form components with voice input, templates, AI analysis
+- `src/components/quick-entry/`: Multi-step form components with voice input and templates
 - `src/components/matches/`, `src/components/trainings/`: Domain-specific lists and cards
 - `src/components/report/`: PDF export components using expo-print
-- `src/screens/`: Top-level screen components (HomeScreen, MatchesScreen, TrainingsScreen, StatsScreen, AIAssistantScreen, ReportsScreen)
+- `src/screens/`: Top-level screen components (HomeScreen, MatchesScreen, TrainingsScreen, StatsScreen, ReportsScreen)
 
 **QuickEntryForm Pattern**: Complex form with multiple concerns
 - Remembers last selections (coach, location, partners, opponents) via AsyncStorage key `'lastSelections'`
@@ -99,8 +99,9 @@ import { getItem } from '@/services/storage';
 
 **Voice Input**: Uses `@react-native-voice/voice` package
 - Component: `src/components/quick-entry/VoiceInput.tsx`
-- Basic voice-to-text with pattern matching in `QuickEntryForm.processVoiceWithAI()`
-- Extracts: score patterns, outcome (won/lost), strengths/weaknesses keywords
+- Basic voice-to-text with simple pattern matching in `QuickEntryForm.processVoiceInput()`
+- Extracts: score patterns, outcome (won/lost), strengths/weaknesses keywords from common Spanish terms
+- No AI/LLM integration - uses only regex and keyword matching
 
 **PDF Export**: `src/services/report/exportPdf.ts`
 - Uses `expo-print` to generate HTML-based PDFs
@@ -108,10 +109,6 @@ import { getItem } from '@/services/storage';
 - Native: Creates PDF file, supports `expo-sharing` for share sheet
 - Supports date range filtering for matches and trainings
 - HTML template includes responsive table layouts
-
-**AI Service**: Currently placeholder at `src/services/aiService.ts`
-- `getAIInsights()` returns mock data
-- Intended for future LLM integration for match/training analysis
 
 **Stats Calculation**: Basic win rate and totals in `src/utils/statsCalculator.ts`
 - `calcBasicStats()` computes totalMatches, winrate, totalTrainings

@@ -1,0 +1,30 @@
+{
+  "short_name": "PadelBrain",
+  "name": "PadelBrain - Track Your Padel Progress",
+  "description": "Track your padel training and matches with intelligent analysis",
+  "icons": [],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#3B82F6",
+  "background_color": "#F8FAFC",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["sports", "productivity", "health"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Nuevo Partido",
+      "short_name": "Partido",
+      "description": "Registrar nuevo partido",
+      "url": "/?action=new-match"
+    },
+    {
+      "name": "Nuevo Entrenamiento",
+      "short_name": "Entrenar",
+      "description": "Registrar nuevo entrenamiento",
+      "url": "/?action=new-training"
+    }
+  ]
+}

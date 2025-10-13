@@ -1,0 +1,106 @@
+{
+  "appId": "com.padelbrain.app",
+  "productName": "PadelBrain",
+  "copyright": "Copyright © 2025 PadelBrain",
+  "directories": {
+    "buildResources": "assets",
+    "output": "dist-electron"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "extraMetadata": {
+    "main": "electron/main.js"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "assets/icon.ico",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "PadelBrain"
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64", "universal"]
+      },
+      {
+        "target": "zip",
+        "arch": ["x64", "arm64", "universal"]
+      }
+    ],
+    "icon": "assets/icon.icns",
+    "category": "public.app-category.sports",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "electron/entitlements.mac.plist",
+    "entitlementsInherit": "electron/entitlements.mac.plist",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+  },
+  "dmg": {
+    "contents": [
+      {
+        "x": 130,
+        "y": 220
+      },
+      {
+        "x": 410,
+        "y": 220,
+        "type": "link",
+        "path": "/Applications"
+      }
+    ],
+    "window": {
+      "width": 540,
+      "height": 380
+    }
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "rpm",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "icon": "assets/icon.png",
+    "category": "Sports",
+    "synopsis": "Track your padel training and matches",
+    "description": "PadelBrain helps you track and analyze your padel training sessions and matches with intelligent insights.",
+    "desktop": {
+      "Name": "PadelBrain",
+      "Comment": "Track your padel progress",
+      "Categories": "Sports;Utility;"
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+  },
+  "publish": {
+    "provider": "generic",
+    "url": "https://releases.padelbrain.com"
+  }
+}

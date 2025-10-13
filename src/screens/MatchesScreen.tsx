@@ -98,55 +98,46 @@ export default function MatchesScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content}>
+        <DraftManager onLoadDraft={handleLoadDraft} />
+
+        {showForm && (
+          <View style={styles.formContainer}>
+            <QuickEntryForm
+              type="match"
+              onSubmit={handleSubmit}
+              onSaveDraft={handleSaveDraft}
+              draftData={draftData}
+            />
+          </View>
+        )}
+
+        <View style={[styles.statsContainer, deviceType !== 'mobile' && styles.statsContainerWide]}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{items.length}</Text>
+            <Text style={styles.statLabel}>Total</Text>
+          </View>
+          <View style={[styles.statCard, styles.winCard]}>
+            <Text style={[styles.statValue, styles.winText]}>{wins}</Text>
+            <Text style={styles.statLabel}>Victorias</Text>
+          </View>
+          <View style={[styles.statCard, styles.lossCard]}>
+            <Text style={[styles.statValue, styles.lossText]}>{losses}</Text>
+            <Text style={styles.statLabel}>Derrotas</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{winRate}%</Text>
+            <Text style={styles.statLabel}>Win Rate</Text>
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Historial</Text>
+
         <MatchList
           items={items}
           onItemPress={handleItemPress}
-          ListHeaderComponent={
-            <View
-              style={
-                deviceType !== 'mobile'
-                  ? { maxWidth: responsiveLayout.getMaxWidth(), alignSelf: 'center', width: '100%' }
-                  : undefined
-              }
-            >
-              <DraftManager onLoadDraft={handleLoadDraft} />
-
-              {showForm && (
-                <View style={styles.formContainer}>
-                  <QuickEntryForm
-                    type="match"
-                    onSubmit={handleSubmit}
-                    onSaveDraft={handleSaveDraft}
-                    draftData={draftData}
-                  />
-                </View>
-              )}
-
-              <View style={[styles.statsContainer, deviceType !== 'mobile' && styles.statsContainerWide]}>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{items.length}</Text>
-                  <Text style={styles.statLabel}>Total</Text>
-                </View>
-                <View style={[styles.statCard, styles.winCard]}>
-                  <Text style={[styles.statValue, styles.winText]}>{wins}</Text>
-                  <Text style={styles.statLabel}>Victorias</Text>
-                </View>
-                <View style={[styles.statCard, styles.lossCard]}>
-                  <Text style={[styles.statValue, styles.lossText]}>{losses}</Text>
-                  <Text style={styles.statLabel}>Derrotas</Text>
-                </View>
-                <View style={styles.statCard}>
-                  <Text style={styles.statValue}>{winRate}%</Text>
-                  <Text style={styles.statLabel}>Win Rate</Text>
-                </View>
-              </View>
-
-              <Text style={styles.sectionTitle}>Historial</Text>
-            </View>
-          }
         />
-      </View>
+      </ScrollView>
 
       <Modal visible={selectedMatch !== null} animationType="slide" onRequestClose={closeDetail}>
         {selectedMatch && (

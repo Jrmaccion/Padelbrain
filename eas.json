@@ -7,31 +7,78 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "ios": { "resourceClass": "default" },
-      "android": { "resourceClass": "default" }
+      "ios": {
+        "resourceClass": "default",
+        "simulator": false
+      },
+      "android": {
+        "resourceClass": "default",
+        "buildType": "apk"
+      },
+      "channel": "development",
+      "env": {
+        "NODE_ENV": "development"
+      }
     },
     "preview": {
       "distribution": "internal",
-      "ios": { "resourceClass": "default" },
-      "android": { "resourceClass": "default" }
+      "ios": {
+        "resourceClass": "m-medium",
+        "simulator": false
+      },
+      "android": {
+        "resourceClass": "medium",
+        "buildType": "apk"
+      },
+      "channel": "preview",
+      "env": {
+        "NODE_ENV": "production"
+      }
     },
     "production": {
-      "ios": { "resourceClass": "default" },
-      "android": { "resourceClass": "default" }
-    },
-    "simulator": {
-      "developmentClient": true,
-      "distribution": "internal",
       "ios": {
-        "simulator": true,
-        "resourceClass": "default",
-        "image": "latest"
+        "resourceClass": "m-medium",
+        "simulator": false,
+        "autoIncrement": "buildNumber"
       },
+      "android": {
+        "resourceClass": "medium",
+        "buildType": "aab",
+        "autoIncrement": "versionCode"
+      },
+      "channel": "production",
       "env": {
-        "EXPO_IOS_VERBOSE_POD_INSTALL": "1",
-        "EXPO_DEBUG": "1"
+        "NODE_ENV": "production"
+      }
+    },
+    "production-ios": {
+      "extends": "production",
+      "ios": {
+        "resourceClass": "m-medium",
+        "simulator": false,
+        "autoIncrement": "buildNumber"
+      }
+    },
+    "production-android": {
+      "extends": "production",
+      "android": {
+        "resourceClass": "medium",
+        "buildType": "aab",
+        "autoIncrement": "versionCode"
       }
     }
   },
-  "submit": { "production": {} }
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your-apple-id@example.com",
+        "ascAppId": "000000000",
+        "appleTeamId": "YOUR_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./android-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
 }

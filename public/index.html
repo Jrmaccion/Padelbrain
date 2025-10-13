@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+
+  <title>PadelBrain - Track Your Padel Progress</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="application-name" content="PadelBrain" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="PadelBrain" />
+  <meta name="description" content="Track your padel training and matches with intelligent analysis" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#3B82F6" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Note: Icons and splash screens should be added after generating assets -->
+  <!-- See ASSETS_REQUIRED.md for instructions -->
+
+  <style>
+    html, body, #root {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background-color: #F8FAFC;
+    }
+
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: #3B82F6;
+      z-index: 9999;
+    }
+
+    #splash-screen.hidden {
+      display: none;
+    }
+
+    .splash-logo {
+      font-size: 48px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .splash-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+
+  <div id="splash-screen">
+    <div class="splash-logo">PadelBrain</div>
+    <div class="splash-spinner"></div>
+  </div>
+
+  <div id="root"></div>
+
+  <script>
+    // Hide splash screen when app loads
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        var splash = document.getElementById('splash-screen');
+        if (splash) {
+          splash.classList.add('hidden');
+        }
+      }, 1000);
+    });
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registered:', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('ServiceWorker registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+</html>

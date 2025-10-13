@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Match, Training } from '@/types';
-import { validateMatch, validateTraining } from '@/schemas/validation';
 
 interface DataState {
   // Data
@@ -76,10 +75,9 @@ export const useDataStore = create<DataState>()(
       addMatch: async (match: Match) => {
         await withErrorHandling(
           async () => {
-            // Validate match data
-            const validation = validateMatch(match);
-            if (!validation.success) {
-              throw new Error(`Invalid match data: ${validation.error.message}`);
+            // Basic validation
+            if (!match.id || !match.date) {
+              throw new Error('Match must have id and date');
             }
 
             const newMatches = [...get().matches, match];
@@ -132,10 +130,9 @@ export const useDataStore = create<DataState>()(
       addTraining: async (training: Training) => {
         await withErrorHandling(
           async () => {
-            // Validate training data
-            const validation = validateTraining(training);
-            if (!validation.success) {
-              throw new Error(`Invalid training data: ${validation.error.message}`);
+            // Basic validation
+            if (!training.id || !training.date) {
+              throw new Error('Training must have id and date');
             }
 
             const newTrainings = [...get().trainings, training];

@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(npm run typecheck)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npm run web:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(expo start:*)",
+      "Bash(node:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm start:*)",
+      "Bash(npm view:*)",
+      "Bash(timeout:*)"
     ],
     "deny": [],
     "ask": []

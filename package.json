@@ -2,6 +2,7 @@
   "name": "padelbrain",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
+  "homepage": ".",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -15,7 +16,22 @@
     "test": "echo \"Jest no configurado aún\" && exit 0",
     "validate": "npm run typecheck",
     "clean": "powershell -NoProfile -Command \"if (Test-Path node_modules) { Remove-Item node_modules -Recurse -Force }; if (Test-Path ios) { Remove-Item ios -Recurse -Force }; if (Test-Path android) { Remove-Item android -Recurse -Force }; npm install\"",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "build:web": "expo export:web",
+    "build:production": "NODE_ENV=production expo export:web",
+    "build:electron": "npm run build:web && electron-builder",
+    "build:electron:win": "npm run build:web && electron-builder --win",
+    "build:electron:mac": "npm run build:web && electron-builder --mac",
+    "build:electron:linux": "npm run build:web && electron-builder --linux",
+    "electron": "electron .",
+    "electron:dev": "NODE_ENV=development electron .",
+    "eas:preview:ios": "eas build --platform ios --profile preview",
+    "eas:preview:android": "eas build --platform android --profile preview",
+    "eas:production:ios": "eas build --platform ios --profile production",
+    "eas:production:android": "eas build --platform android --profile production",
+    "eas:production:all": "eas build --platform all --profile production",
+    "eas:submit:ios": "eas submit --platform ios --profile production",
+    "eas:submit:android": "eas submit --platform android --profile production"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -23,6 +39,7 @@
     "@react-native-community/slider": "^4.5.7",
     "@react-native-voice/voice": "^3.1.5",
     "expo": "~54.0.13",
+    "expo-build-properties": "^1.0.9",
     "expo-dev-client": "~6.0.15",
     "expo-print": "^15.0.7",
     "expo-sharing": "^14.0.7",
@@ -34,7 +51,6 @@
     "react-native-safe-area-context": "^5.6.1",
     "react-native-web": "^0.21.0",
     "uuid": "^9.0.1",
-    "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -43,8 +59,13 @@
     "@types/react": "~19.1.10",
     "@types/uuid": "^10.0.0",
     "babel-plugin-module-resolver": "^5.0.0",
+    "electron": "^33.4.1",
+    "electron-builder": "^26.1.0",
     "patch-package": "^8.0.0",
     "typescript": "^5.3.3"
   },
-  "private": true
+  "private": true,
+  "build": {
+    "extends": "./electron-builder.json"
+  }
 }

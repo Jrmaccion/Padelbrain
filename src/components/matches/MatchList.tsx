@@ -9,7 +9,7 @@ interface MatchListProps {
   ListHeaderComponent?: React.ComponentType<any> | React.ReactElement | null;
 }
 
-export default function MatchList({ items, onItemPress, ListHeaderComponent }: MatchListProps) {
+export default function MatchList({ items, onItemPress }: MatchListProps) {
   if (!items || items.length === 0) {
     return (
       <View style={{ padding: 20, alignItems: 'center' }}>
@@ -19,15 +19,10 @@ export default function MatchList({ items, onItemPress, ListHeaderComponent }: M
   }
 
   return (
-    <FlatList
-      data={items}
-      keyExtractor={(item: Match) => item.id}
-      renderItem={({ item }) => <MatchCard item={item} onPress={onItemPress} />}
-      ListHeaderComponent={ListHeaderComponent}
-      contentContainerStyle={{ gap: 0, paddingHorizontal: 16 }}
-      initialNumToRender={10}
-      windowSize={5}
-      removeClippedSubviews
-    />
+    <View>
+      {items.map((item) => (
+        <MatchCard key={item.id} item={item} onPress={onItemPress} />
+      ))}
+    </View>
   );
 }

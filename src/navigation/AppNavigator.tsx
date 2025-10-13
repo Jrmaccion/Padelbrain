@@ -16,7 +16,7 @@ interface TabConfig {
   label: string;
   icon: string;
   tooltip?: string;
-  badgeKey?: 'aiUnread' | 'statsAlerts'; // extensible
+  badgeKey?: 'statsAlerts'; // extensible
 }
 
 const tabs: TabConfig[] = [
@@ -24,7 +24,6 @@ const tabs: TabConfig[] = [
   { id: 'Trainings', label: 'Entrenar',   icon: '🏃', tooltip: 'Entrenamientos' },
   { id: 'Matches',   label: 'Partidos',   icon: '🎾', tooltip: 'Partidos' },
   { id: 'Stats',     label: 'Stats',      icon: '📊', tooltip: 'Estadísticas', badgeKey: 'statsAlerts' },
-  { id: 'AI',        label: 'IA',         icon: '🤖', tooltip: 'Asistente IA', badgeKey: 'aiUnread' },
   { id: 'Reports',   label: 'Informes',   icon: '🧾', tooltip: 'Exportar/Informes' },
 ];
 
@@ -34,7 +33,6 @@ export default function AppNavigator() {
   const isMobile = deviceType === 'mobile';
 
   // Estado de ejemplo para badges (conéctalo a tu store si lo tienes)
-  const [aiUnread, setAiUnread] = useState(3);
   const [statsAlerts, setStatsAlerts] = useState(0);
 
   // Atajos de teclado (web): 1..5 seleccionan la pestaña
@@ -42,7 +40,7 @@ export default function AppNavigator() {
     if (Platform.OS !== 'web') return;
     const handler = (e: KeyboardEvent) => {
       const map: Record<string, Route> = {
-        '1': 'Home', '2': 'Trainings', '3': 'Matches', '4': 'Stats', '5': 'AI', '6': 'Reports'
+        '1': 'Home', '2': 'Trainings', '3': 'Matches', '4': 'Stats', '5': 'Reports'
       };
       if (map[e.key]) setRoute(map[e.key]);
     };
@@ -52,7 +50,6 @@ export default function AppNavigator() {
 
   const getBadgeValue = (key?: TabConfig['badgeKey']) => {
     if (!key) return undefined;
-    if (key === 'aiUnread') return aiUnread;
     if (key === 'statsAlerts') return statsAlerts;
     return undefined;
   };
@@ -64,7 +61,6 @@ export default function AppNavigator() {
       case 'Trainings': return <TrainingsScreen />;
       case 'Matches':   return <MatchesScreen />;
       case 'Stats':     return <StatsScreen />;
-      case 'AI':        return <AIAssistantScreen />;
       case 'Reports':   return <ReportsScreen />;
       default:          return <HomeScreen navigation={nav} />;
     }
