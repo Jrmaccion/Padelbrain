@@ -32,15 +32,13 @@
     },
     "android": {
       "package": "com.padelbrain.app",
-      "versionCode": 1,
+      "versionCode": 5,
       "icon": "./assets/android-icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#3B82F6"
       },
       "permissions": [
-        "RECORD_AUDIO",
-        "INTERNET",
         "RECORD_AUDIO",
         "INTERNET"
       ]
@@ -69,9 +67,9 @@
             "deploymentTarget": "15.1"
           },
           "android": {
-            "compileSdkVersion": 34,
-            "targetSdkVersion": 34,
-            "minSdkVersion": 23
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "minSdkVersion": 24
           }
         }
       ]
@@ -83,9 +81,6 @@
       "eas": {
         "projectId": "ac33327e-e993-4cd7-9c11-42deeca171af"
       }
-    },
-    "hooks": {
-      "postPublish": []
     },
     "runtimeVersion": {
       "policy": "appVersion"

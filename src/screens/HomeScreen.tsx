@@ -1,6 +1,6 @@
 ﻿// src/screens/HomeScreen.tsx
 import { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native';
 import Header from '@/components/common/Header';
 import { useTrainings } from '@/hooks/useTrainings';
 import { useMatches } from '@/hooks/useMatches';
@@ -60,18 +60,19 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   ];
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Wrapper con max-width en desktop */}
-      <View style={[
-        styles.wrapper,
-        deviceType !== 'mobile' && {
-          maxWidth: responsiveLayout.getMaxWidth(),
-          alignSelf: 'center',
-          width: '100%',
-        }
-      ]}>
-        <Header title="PadelBrain" />
+    <View style={styles.container}>
+      <Header title="PadelBrain" />
 
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Wrapper con max-width en desktop */}
+        <View style={[
+          styles.wrapper,
+          deviceType !== 'mobile' && {
+            maxWidth: responsiveLayout.getMaxWidth(),
+            alignSelf: 'center',
+            width: '100%',
+          }
+        ]}>
         <View style={styles.greetingSection}>
           <Text style={styles.greeting}>{greeting} 👋</Text>
           <Text style={styles.subGreeting}>
@@ -232,15 +233,28 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             </Text>
           </View>
         )}
-
         <View style={{ height: 40 }} />
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    ...Platform.select({
+      web: { height: '100vh' as any, overflow: 'hidden' as any }
+    })
+  },
+  scrollView: {
+    flex: 1,
+    ...Platform.select({
+      web: { overflow: 'scroll' as any }
+    })
+  },
+  scrollContent: { flexGrow: 1 },
   wrapper: {
     // Max-width aplicado dinámicamente
   },

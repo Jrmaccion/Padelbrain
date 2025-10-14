@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, ViewStyle, TextStyle, ImageStyle } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, ViewStyle, TextStyle, ImageStyle, Platform } from 'react-native';
 import Header from '@/components/common/Header';
 import MatchList from '@/components/matches/MatchList';
 import QuickEntryForm from '@/components/quick-entry/QuickEntryForm';
@@ -393,7 +393,13 @@ function RatingRow({ label, value, icon }: { label: string; value: number; icon:
 }
 
 const baseStyles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    ...Platform.select({
+      web: { height: '100vh' as any, overflow: 'hidden' as any }
+    })
+  },
   errorBanner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FEE2E2', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#FCA5A5' },
   errorText: { fontSize: 14, color: '#991B1B', fontWeight: '600', flex: 1 },
   errorDismiss: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FCA5A5', justifyContent: 'center', alignItems: 'center' },
@@ -401,7 +407,14 @@ const baseStyles = StyleSheet.create({
   headerActions: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   addButton: { backgroundColor: '#3B82F6', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
   addButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
-  content: { flex: 1, padding: 16 },
+  content: {
+    flex: 1,
+    padding: 16,
+    flexGrow: 1,
+    ...Platform.select({
+      web: { overflow: 'scroll' as any }
+    })
+  },
   formContainer: { marginBottom: 16 },
   statsContainer: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   statCard: { flex: 1, backgroundColor: '#FFFFFF', padding: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' },

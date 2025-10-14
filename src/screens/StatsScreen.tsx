@@ -1,5 +1,5 @@
 ﻿import { useEffect } from 'react';
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Platform } from 'react-native';
 import Header from '@/components/common/Header';
 import { useMatches } from '@/hooks/useMatches';
 import { useTrainings } from '@/hooks/useTrainings';
@@ -58,8 +58,8 @@ export default function StatsScreen() {
   return (
     <View style={styles.container}>
       <Header title="Estadísticas" />
-      
-      <ScrollView style={styles.content}>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Wrapper con max-width en desktop */}
         <View style={[
           deviceType !== 'mobile' && {
@@ -283,8 +283,20 @@ function RatingBar({ label, value, color }: { label: string; value: number; colo
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-  content: { flex: 1, padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+    ...Platform.select({
+      web: { height: '100vh' as any, overflow: 'hidden' as any }
+    })
+  },
+  scrollView: {
+    flex: 1,
+    ...Platform.select({
+      web: { overflow: 'scroll' as any }
+    })
+  },
+  content: { flexGrow: 1, padding: 16 },
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 20, fontWeight: '700', color: '#1E293B', marginBottom: 12 },
   statsGrid: { gap: 12 },

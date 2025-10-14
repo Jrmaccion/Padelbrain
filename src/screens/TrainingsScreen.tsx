@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, Platform } from 'react-native';
 import Header from '@/components/common/Header';
 import TrainingList from '@/components/trainings/TrainingList';
 import QuickEntryForm from '@/components/quick-entry/QuickEntryForm';
@@ -103,10 +103,9 @@ export default function TrainingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        <TrainingList
-          items={items}
-          onItemPress={handleItemPress}
+      <TrainingList
+        items={items}
+        onItemPress={handleItemPress}
           ListHeaderComponent={
             <View
               style={
@@ -159,7 +158,6 @@ export default function TrainingsScreen() {
             </View>
           }
         />
-      </View>
 
       {/* Modal de detalle */}
       <Modal
@@ -278,7 +276,10 @@ function RatingRow({ label, value, icon }: { label: string; value: number; icon:
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC'
+    backgroundColor: '#F8FAFC',
+    ...Platform.select({
+      web: { height: '100vh' as any, overflow: 'hidden' as any }
+    })
   },
   errorBanner: {
     flexDirection: 'row',

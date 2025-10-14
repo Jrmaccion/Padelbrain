@@ -1,4 +1,4 @@
-﻿import { FlatList, View, Text } from 'react-native';
+﻿import { FlatList, View, Text, Platform } from 'react-native';
 import { Training } from '@/types';
 import TrainingCard from './TrainingCard';
 
@@ -9,23 +9,30 @@ interface TrainingListProps {
 }
 
 export default function TrainingList({ items, onItemPress, ListHeaderComponent }: TrainingListProps) {
-  if (items.length === 0) {
-    return (
-      <View style={{ padding: 20, alignItems: 'center' }}>
-        <Text style={{ color: '#94A3B8' }}>No hay entrenamientos registrados</Text>
-      </View>
-    );
-  }
-
   return (
     <FlatList
+      style={{
+        flex: 1,
+        ...Platform.select({
+          web: { overflow: 'scroll' as any }
+        })
+      }}
       data={items}
       keyExtractor={(item: Training) => item.id}
       renderItem={({ item }: { item: Training }) => (
         <TrainingCard item={item} onPress={onItemPress} />
       )}
       ListHeaderComponent={ListHeaderComponent}
-      contentContainerStyle={{ gap: 0, paddingHorizontal: 16 }}
+      ListEmptyComponent={
+        <View style={{ padding: 20, alignItems: 'center' }}>
+          <Text style={{ color: '#94A3B8' }}>No hay entrenamientos registrados</Text>
+        </View>
+      }
+      contentContainerStyle={{
+        paddingHorizontal: 16,
+        paddingBottom: 20,
+        flexGrow: 1
+      }}
     />
   );
 }

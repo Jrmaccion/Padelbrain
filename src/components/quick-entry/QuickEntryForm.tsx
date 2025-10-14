@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
 import { Training, Match, Rating1to5 } from '@/types';
@@ -360,7 +360,7 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
   const removeTrainingPartner = (name: string) => setTrainingPartners((prev) => prev.filter((p) => p !== name));
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Card>
         <Text style={styles.title}>Registro Rápido - {type === 'training' ? 'Entrenamiento' : 'Partido'}</Text>
 
@@ -521,12 +521,12 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
           </TouchableOpacity>
         </View>
       </Card>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {},
   title: { fontSize: 20, fontWeight: '700', marginBottom: 16, color: '#1E293B' },
   section: { marginBottom: 20 },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8, color: '#334155' },

@@ -57,9 +57,6 @@ export default function TrainingCard({ item, onPress }: TrainingCardProps) {
           <Text style={styles.value}>{item.location}</Text>
         </View>
       )}
-
-    
-
       {/* Compañeros de entrenamiento (chips) */}
       {Array.isArray((item as any).trainingPartners) && (item as any).trainingPartners.length > 0 && (
         <View style={{ marginTop: 6, marginBottom: 2 }}>
@@ -73,9 +70,6 @@ export default function TrainingCard({ item, onPress }: TrainingCardProps) {
           </View>
         </View>
       )}
-
-
-
       {item.goals && item.goals.length > 0 && (
         <View style={styles.goalsContainer}>
           <Text style={styles.goalsLabel}>🎯 Objetivos:</Text>
