@@ -287,13 +287,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
     ...Platform.select({
-      web: { height: '100vh' as any, overflow: 'hidden' as any }
+      web: { minHeight: '100vh' as any, overflowX: 'hidden' as any }
     })
   },
   scrollView: {
     flex: 1,
     ...Platform.select({
-      web: { overflow: 'scroll' as any }
+      web: { overflowY: 'auto' as any, WebkitOverflowScrolling: 'touch' as any }
     })
   },
   content: { flexGrow: 1, padding: 16 },

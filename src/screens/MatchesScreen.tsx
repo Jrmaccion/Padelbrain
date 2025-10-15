@@ -397,7 +397,7 @@ const baseStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
     ...Platform.select({
-      web: { height: '100vh' as any, overflow: 'hidden' as any }
+      web: { minHeight: '100vh' as any, overflowX: 'hidden' as any }
     })
   },
   errorBanner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FEE2E2', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#FCA5A5' },
@@ -412,7 +412,7 @@ const baseStyles = StyleSheet.create({
     padding: 16,
     flexGrow: 1,
     ...Platform.select({
-      web: { overflow: 'scroll' as any }
+      web: { overflowY: 'auto' as any, WebkitOverflowScrolling: 'touch' as any }
     })
   },
   formContainer: { marginBottom: 16 },

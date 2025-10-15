@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
     ...Platform.select({
-      web: { height: '100vh' as any, overflow: 'hidden' as any }
+      web: { minHeight: '100vh' as any, overflowX: 'hidden' as any }
     })
   },
   errorBanner: {

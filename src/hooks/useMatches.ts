@@ -1,51 +1,41 @@
-﻿import { useEffect, useState } from 'react';
-import { getItem, setItem } from '@/services/storage';
+﻿import { useCallback, useEffect } from 'react';
+import { useDataStore } from '@/store/useDataStore';
 import { Match } from '@/types';
 
 export function useMatches() {
-  const [items, setItems] = useState<Match[]>([]);
+  const matches = useDataStore((state) => state.matches);
+  const loadMatches = useDataStore((state) => state.loadMatches);
+  const addMatch = useDataStore((state) => state.addMatch);
+  const updateMatch = useDataStore((state) => state.updateMatch);
+  const removeMatch = useDataStore((state) => state.removeMatch);
+
+  const load = useCallback(async () => {
+    await loadMatches();
+  }, [loadMatches]);
+
+  const add = useCallback(async (match: Match) => {
+    await addMatch(match);
+  }, [addMatch]);
+
+  const update = useCallback(async (id: string, partial: Partial<Match>) => {
+    await updateMatch(id, partial);
+  }, [updateMatch]);
+
+  const remove = useCallback(async (id: string) => {
+    await removeMatch(id);
+  }, [removeMatch]);
 
   useEffect(() => {
     load();
-  }, []);
-
-  const load = async () => {
-    const data = await getItem<Match[]>('matches');
-    setItems(data || []);
-  };
-
-  const add = async (m: Match) => {
-    const next = [...items, m];
-    await setItem('matches', next);
-    setItems(next);
-  };
-
-  const update = async (id: string, partial: Partial<Match>) => {
-    const index = items.findIndex(m => m.id === id);
-    if (index === -1) {
-      throw new Error(`Partido con ID ${id} no encontrado`);
-    }
-
-    const updated = [...items];
-    updated[index] = { ...updated[index], ...partial };
-    
-    await setItem('matches', updated);
-    setItems(updated);
-  };
-
-  const remove = async (id: string) => {
-    const next = items.filter((m) => m.id !== id);
-    await setItem('matches', next);
-    setItems(next);
-  };
+  }, [load]);
 
   return {
-    matches: items,
-    items, // Alias para compatibilidad con código existente
+    matches,
+    items: matches, // Alias para compatibilidad con código existente
     add,
     update,
     remove,
-    load, // Alias para reload
+    load,
     reload: load,
   };
 }

@@ -1,47 +1,37 @@
-﻿import { useEffect, useState } from 'react';
-import { getItem, setItem } from '@/services/storage';
+﻿import { useCallback, useEffect } from 'react';
 import { Training } from '@/types';
+import { useDataStore } from '@/store/useDataStore';
 
 export function useTrainings() {
-  const [items, setItems] = useState<Training[]>([]);
+  const trainings = useDataStore((state) => state.trainings);
+  const loadTrainings = useDataStore((state) => state.loadTrainings);
+  const addTraining = useDataStore((state) => state.addTraining);
+  const updateTraining = useDataStore((state) => state.updateTraining);
+  const removeTraining = useDataStore((state) => state.removeTraining);
+
+  const load = useCallback(async () => {
+    await loadTrainings();
+  }, [loadTrainings]);
+
+  const add = useCallback(async (training: Training) => {
+    await addTraining(training);
+  }, [addTraining]);
+
+  const update = useCallback(async (id: string, partial: Partial<Training>) => {
+    await updateTraining(id, partial);
+  }, [updateTraining]);
+
+  const remove = useCallback(async (id: string) => {
+    await removeTraining(id);
+  }, [removeTraining]);
 
   useEffect(() => {
     load();
-  }, []);
-
-  const load = async () => {
-    const data = await getItem<Training[]>('trainings');
-    setItems(data || []);
-  };
-
-  const add = async (t: Training) => {
-    const next = [...items, t];
-    await setItem('trainings', next);
-    setItems(next);
-  };
-
-  const update = async (id: string, partial: Partial<Training>) => {
-    const index = items.findIndex(t => t.id === id);
-    if (index === -1) {
-      throw new Error(`Entrenamiento con ID ${id} no encontrado`);
-    }
-
-    const updated = [...items];
-    updated[index] = { ...updated[index], ...partial };
-    
-    await setItem('trainings', updated);
-    setItems(updated);
-  };
-
-  const remove = async (id: string) => {
-    const next = items.filter((t) => t.id !== id);
-    await setItem('trainings', next);
-    setItems(next);
-  };
+  }, [load]);
 
   return {
-    trainings: items,
-    items, // Alias para compatibilidad con código existente
+    trainings,
+    items: trainings, // Alias para compatibilidad con código existente
     add,
     update,
     remove,

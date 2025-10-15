@@ -14,7 +14,7 @@ export default function TrainingList({ items, onItemPress, ListHeaderComponent }
       style={{
         flex: 1,
         ...Platform.select({
-          web: { overflow: 'scroll' as any }
+          web: { overflowY: 'auto' as any, WebkitOverflowScrolling: 'touch' as any }
         })
       }}
       data={items}

@@ -65,7 +65,19 @@ export const useDataStore = create<DataState>()(
         set({ isLoadingMatches: true });
         await withErrorHandling(
           async () => {
-            // Data already in store from persistence
+            // Rehydrate legacy storage if present and store is empty
+            if (get().matches.length === 0) {
+              const legacyJson = await AsyncStorage.getItem('matches');
+              if (legacyJson) {
+                try {
+                  const legacyMatches = JSON.parse(legacyJson) as Match[];
+                  set({ matches: legacyMatches });
+                  await AsyncStorage.removeItem('matches');
+                } catch (parseError) {
+                  console.error('Failed to migrate legacy matches:', parseError);
+                }
+              }
+            }
             set({ isLoadingMatches: false });
           },
           (error) => set({ matchesError: error, isLoadingMatches: false })
@@ -120,7 +132,19 @@ export const useDataStore = create<DataState>()(
         set({ isLoadingTrainings: true });
         await withErrorHandling(
           async () => {
-            // Data already in store from persistence
+            // Rehydrate legacy storage if present and store is empty
+            if (get().trainings.length === 0) {
+              const legacyJson = await AsyncStorage.getItem('trainings');
+              if (legacyJson) {
+                try {
+                  const legacyTrainings = JSON.parse(legacyJson) as Training[];
+                  set({ trainings: legacyTrainings });
+                  await AsyncStorage.removeItem('trainings');
+                } catch (parseError) {
+                  console.error('Failed to migrate legacy trainings:', parseError);
+                }
+              }
+            }
             set({ isLoadingTrainings: false });
           },
           (error) => set({ trainingsError: error, isLoadingTrainings: false })
