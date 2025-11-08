@@ -1,13 +1,15 @@
-﻿import { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, Platform } from 'react-native';
+﻿import { useState, useEffect, useMemo } from 'react';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, Platform, Alert } from 'react-native';
 import Header from '@/components/common/Header';
 import TrainingList from '@/components/trainings/TrainingList';
 import QuickEntryForm from '@/components/quick-entry/QuickEntryForm';
-import DraftManager, { saveDraftFromForm } from '@/components/quick-entry/DraftManager';
+import DraftManager, { saveDraftFromForm, resetToDraft } from '@/components/quick-entry/DraftManager';
 import { useDataStore } from '@/store/useDataStore';
 import { Training } from '@/types';
 import { useResponsive } from '@/constants/layout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import SearchBar from '@/components/common/SearchBar';
+import FilterButton, { FilterOption } from '@/components/common/FilterButton';
 
 export default function TrainingsScreen() {
   const {
@@ -16,12 +18,19 @@ export default function TrainingsScreen() {
     trainingsError,
     loadTrainings: load,
     addTraining: add,
+    updateTraining: update,
     removeTraining: remove,
     clearErrors
   } = useDataStore();
   const [showForm, setShowForm] = useState(false);
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
   const [draftToLoad, setDraftToLoad] = useState<any>(null);
+  const [editingTraining, setEditingTraining] = useState<Training | null>(null);
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [coachFilter, setCoachFilter] = useState<string[]>([]);
+  const [locationFilter, setLocationFilter] = useState<string[]>([]);
 
   const { deviceType, layout: responsiveLayout } = useResponsive();
 
@@ -30,10 +39,38 @@ export default function TrainingsScreen() {
   }, [load]);
 
   const handleSubmit = async (training: Training) => {
-    await add(training);
-    if (!trainingsError) {
-      setShowForm(false);
+    if (editingTraining) {
+      // Update existing training
+      await update(training.id, training);
+      if (!trainingsError) {
+        setShowForm(false);
+        setEditingTraining(null);
+        setSelectedTraining(null);
+        Alert.alert(
+          '✅ Entrenamiento actualizado',
+          'Los cambios se han guardado correctamente.',
+          [{ text: 'OK' }]
+        );
+      }
+    } else {
+      // Create new training
+      await add(training);
+      if (!trainingsError) {
+        setShowForm(false);
+        Alert.alert(
+          '✅ Entrenamiento guardado',
+          'El entrenamiento se ha registrado correctamente en tu historial.',
+          [{ text: 'OK' }]
+        );
+      }
     }
+  };
+
+  const handleEdit = (training: Training) => {
+    setEditingTraining(training);
+    setSelectedTraining(null);
+    setDraftToLoad(null);
+    setShowForm(true);
   };
 
   const handleSaveDraft = async (draft: Partial<Training>) => {
@@ -68,6 +105,80 @@ export default function TrainingsScreen() {
     }
   };
 
+  const handleResetToDraft = async () => {
+    if (!selectedTraining) return;
+
+    Alert.alert(
+      'Convertir a borrador',
+      '¿Quieres convertir este entrenamiento en borrador? Se eliminará del historial y podrás editarlo desde "Borradores".',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Convertir',
+          onPress: async () => {
+            await resetToDraft('training', selectedTraining);
+            await remove(selectedTraining.id);
+            if (!trainingsError) {
+              setSelectedTraining(null);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Extract unique filter options
+  const coachOptions: FilterOption[] = useMemo(() => {
+    const coaches = new Set(items.map(t => t.coach).filter((coach): coach is string => Boolean(coach)));
+    return Array.from(coaches).map(coach => ({
+      label: coach,
+      value: coach,
+      count: items.filter(t => t.coach === coach).length
+    }));
+  }, [items]);
+
+  const locationOptions: FilterOption[] = useMemo(() => {
+    const locations = new Set(items.map(t => t.location).filter((loc): loc is string => Boolean(loc)));
+    return Array.from(locations).map(loc => ({
+      label: loc,
+      value: loc,
+      count: items.filter(t => t.location === loc).length
+    }));
+  }, [items]);
+
+  // Filter trainings based on search and filters
+  const filteredTrainings = useMemo(() => {
+    return items.filter(training => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const searchableText = [
+          training.location,
+          training.coach,
+          training.notes,
+          ...(training.goals || []),
+          ...(training.trainingPartners || []),
+          training.postReview?.learned,
+          training.postReview?.improveNext
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        if (!searchableText.includes(query)) return false;
+      }
+
+      // Coach filter
+      if (coachFilter.length > 0) {
+        if (!coachFilter.includes(training.coach || '')) return false;
+      }
+
+      // Location filter
+      if (locationFilter.length > 0) {
+        if (!locationFilter.includes(training.location || '')) return false;
+      }
+
+      return true;
+    });
+  }, [items, searchQuery, coachFilter, locationFilter]);
+
   // Show loading spinner on initial load
   if (isLoadingTrainings && items.length === 0) {
     return (
@@ -92,7 +203,7 @@ export default function TrainingsScreen() {
         </View>
       )}
       
-      <View style={styles.headerActions}>
+      <View style={styles.headerActionsContainer}>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowForm(!showForm)}
@@ -104,7 +215,7 @@ export default function TrainingsScreen() {
       </View>
 
       <TrainingList
-        items={items}
+        items={filteredTrainings}
         onItemPress={handleItemPress}
           ListHeaderComponent={
             <View
@@ -123,6 +234,8 @@ export default function TrainingsScreen() {
                     onSubmit={handleSubmit}
                     onSaveDraft={handleSaveDraft}
                     draftData={draftToLoad}
+                    editMode={!!editingTraining}
+                    itemToEdit={editingTraining || undefined}
                   />
                 </View>
               )}
@@ -154,7 +267,42 @@ export default function TrainingsScreen() {
                 </View>
               </View>
 
-              <Text style={styles.sectionTitle}>Historial</Text>
+              {/* Search and Filter Section */}
+              <View style={styles.searchFilterContainer}>
+                <SearchBar
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Buscar por entrenador, lugar, objetivos..."
+                  style={styles.searchBar}
+                />
+                <View style={styles.filterRow}>
+                  {coachOptions.length > 0 && (
+                    <FilterButton
+                      label="Entrenador"
+                      options={coachOptions}
+                      selectedValues={coachFilter}
+                      onSelect={setCoachFilter}
+                    />
+                  )}
+                  {locationOptions.length > 0 && (
+                    <FilterButton
+                      label="Lugar"
+                      options={locationOptions}
+                      selectedValues={locationFilter}
+                      onSelect={setLocationFilter}
+                    />
+                  )}
+                </View>
+              </View>
+
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Historial</Text>
+                {(searchQuery || coachFilter.length > 0 || locationFilter.length > 0) && (
+                  <Text style={styles.resultCount}>
+                    {filteredTrainings.length} de {items.length}
+                  </Text>
+                )}
+              </View>
             </View>
           }
         />
@@ -172,11 +320,22 @@ export default function TrainingsScreen() {
                 <Text style={styles.backButtonText}>← Volver</Text>
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Detalle</Text>
-              <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>🗑️</Text>
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity onPress={() => handleEdit(selectedTraining)} style={styles.editButton}>
+                  <Text style={styles.editButtonText}>✏️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleResetToDraft} style={styles.draftButton}>
+                  <Text style={styles.draftButtonText}>📝</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+                  <Text style={styles.deleteButtonText}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <ScrollView style={styles.modalContent}>
+            <ScrollView
+              style={styles.modalContent}
+              contentContainerStyle={styles.modalContentContainer}
+            >
               <TrainingDetailView training={selectedTraining} />
             </ScrollView>
           </View>
@@ -310,7 +469,7 @@ const styles = StyleSheet.create({
     color: '#7F1D1D',
     fontWeight: '700'
   },
-  headerActions: {
+  headerActionsContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#FFFFFF',
@@ -404,6 +563,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#475569'
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8
+  },
+  editButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#DBEAFE',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  editButtonText: {
+    fontSize: 20
+  },
+  draftButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  draftButtonText: {
+    fontSize: 20
+  },
   deleteButton: {
     width: 40,
     height: 40,
@@ -418,6 +603,9 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     padding: 16
+  },
+  modalContentContainer: {
+    paddingBottom: 40
   },
   detailContainer: {
     gap: 20
@@ -476,5 +664,29 @@ const styles = StyleSheet.create({
   },
   ratingDotActive: {
     backgroundColor: '#3B82F6'
+  },
+  // Search and Filter
+  searchFilterContainer: {
+    marginBottom: 16,
+    gap: 12
+  },
+  searchBar: {
+    width: '100%'
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap'
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  resultCount: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500'
   }
 });

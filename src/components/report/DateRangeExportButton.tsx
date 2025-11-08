@@ -1,7 +1,6 @@
 // src/components/report/DateRangeExportButton.tsx
 import React, { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, Platform } from 'react-native';
-import * as Print from 'expo-print';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, Platform, StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { Match, Training } from '@/types';
 import { exportActivityReportPDF } from '@/services/report/exportPdf';
 
@@ -11,8 +10,8 @@ interface Props {
   matches: Match[];
   trainings: Training[];
   defaultPreset?: PresetKey;
-  buttonStyle?: any;
-  buttonTextStyle?: any;
+  buttonStyle?: StyleProp<ViewStyle>;
+  buttonTextStyle?: StyleProp<TextStyle>;
 }
 
 function toISODate(d: Date): string {
@@ -78,58 +77,45 @@ export default function DateRangeExportButton({
         return;
       }
 
-      await exportActivityReportPDF(matches, trainings, {
+      // Create new Date objects to avoid mutating the original dates
+      const fromDate = new Date(from);
+      fromDate.setHours(0, 0, 0, 0);
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999);
+
+      const result = await exportActivityReportPDF(matches, trainings, {
         title: 'Informe de actividad',
-        from: new Date(from.setHours(0,0,0,0)).toISOString(),
-        to: new Date(to.setHours(23,59,59,999)).toISOString(),
+        from: fromDate.toISOString(),
+        to: toDate.toISOString(),
         includeMatches,
         includeTrainings,
         filename: `PadelBrain-Informe-${toISODate(from)}_${toISODate(to)}`,
       });
 
       setOpen(false);
+
       if (Platform.OS === 'web') {
         Alert.alert('Impresión iniciada', 'Se ha abierto el diálogo de impresión. Selecciona "Guardar como PDF" o tu impresora preferida.');
       } else {
-        Alert.alert('PDF generado', 'El archivo se ha creado correctamente.');
+        // On Android/iOS, share the generated PDF
+        if (result.uri) {
+          const Sharing = await import('expo-sharing');
+          const canShare = await Sharing.isAvailableAsync();
+          if (canShare) {
+            await Sharing.shareAsync(result.uri, {
+              dialogTitle: 'Compartir informe PDF',
+              mimeType: 'application/pdf',
+            });
+          } else {
+            Alert.alert('PDF generado', 'El archivo se ha creado correctamente.');
+          }
+        }
       }
     } catch (e: any) {
       Alert.alert('Error al exportar', e?.message ?? 'Ocurrió un error inesperado');
     }
   };
 
-  // Botón de diagnóstico: genera un PDF mínimo para validar el pipeline
-  const handleTestPipeline = async () => {
-    try {
-      const html = `
-        <html>
-          <head><meta charSet="utf-8" /></head>
-          <body style="font-family: -apple-system,Segoe UI,Roboto,Arial; padding:24px;">
-            <h1>PDF de Prueba</h1>
-            <p>Si ves este texto, el pipeline de PDF funciona.</p>
-            <p><strong>Matches:</strong> ${matches.length} | <strong>Trainings:</strong> ${trainings.length}</p>
-          </body>
-        </html>`;
-      const { uri } = await Print.printToFileAsync({ html });
-
-      if (Platform.OS === 'web') {
-        const res = await fetch(uri);
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `PadelBrain-test.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      } else {
-        Alert.alert('PDF de prueba', 'Se generó un PDF mínimo correctamente.');
-      }
-    } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'No se pudo crear el PDF de prueba');
-    }
-  };
 
   const PresetChip = ({ id, label }: { id: PresetKey; label: string }) => (
     <TouchableOpacity
@@ -213,11 +199,8 @@ export default function DateRangeExportButton({
             </TouchableOpacity>
           </View>
 
-          {/* Botón de prueba dentro del selector */}
+          {/* Preview del rango seleccionado */}
           <View style={{ marginTop: 12 }}>
-            <TouchableOpacity style={styles.testBtn} onPress={handleTestPipeline} activeOpacity={0.8}>
-              <Text style={styles.testBtnText}>Probar pipeline PDF (mínimo)</Text>
-            </TouchableOpacity>
             <Text style={styles.rangePreview}>
               Rango seleccionado: {toISODate(from)} → {toISODate(to)}
             </Text>
@@ -283,16 +266,5 @@ const styles = StyleSheet.create({
   exportBtn: { backgroundColor: '#0EA5E9', borderColor: '#0284C7' },
   footerBtnText: { fontSize: 14, fontWeight: '700', color: '#0F172A' },
 
-  testBtn: {
-    backgroundColor: '#F1F5F9',
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    marginBottom: 8
-  },
-  testBtnText: { fontSize: 14, fontWeight: '700', color: '#0F172A' },
-
-  rangePreview: { fontSize: 12, color: '#475569' }
+  rangePreview: { fontSize: 12, color: '#475569', textAlign: 'center' }
 });

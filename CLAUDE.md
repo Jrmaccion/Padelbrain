@@ -16,6 +16,23 @@ npm run ios         # Run on iOS
 npm run web         # Run on Web
 ```
 
+### Electron (Desktop)
+```bash
+npm run build:web             # Build web bundle
+npm run electron:dev          # Run Electron in development mode
+npm run build:electron        # Build desktop app for current platform
+npm run build:electron:win    # Build for Windows
+npm run build:electron:mac    # Build for macOS
+npm run build:electron:linux  # Build for Linux
+```
+
+### PWA (Progressive Web App)
+```bash
+npm run verify:pwa            # Verify PWA setup is complete
+npm run web                   # Test PWA locally (with service worker on localhost)
+npm run build:web             # Build PWA for production deployment
+```
+
 ### Type Checking & Validation
 ```bash
 npm run typecheck   # Run TypeScript compiler (no emit)
@@ -33,16 +50,29 @@ Note: Jest is not yet configured. Test scripts are placeholders.
 
 ### Data Flow & State Management
 
-**Storage Layer**: Uses `@react-native-async-storage/async-storage` for persistence
-- All data is stored as JSON in AsyncStorage with keys: `'matches'`, `'trainings'`, `'lastSelections'`, etc.
-- Wrapper service at `src/services/storage.ts` provides `getItem<T>()`, `setItem<T>()`, `removeItem()`
+**Zustand Global Store**: Uses Zustand with AsyncStorage persistence (`src/store/useDataStore.ts`)
+- Single source of truth for all matches and trainings data
+- Automatic persistence via Zustand's `persist` middleware with AsyncStorage backend
+- Only data arrays are persisted, not loading/error states
+- Legacy AsyncStorage migration: On first load, migrates old `'matches'` and `'trainings'` keys to Zustand store
 
-**Custom Hooks Pattern**: State management via React hooks that encapsulate CRUD operations
-- `useMatches()` and `useTrainings()` hooks load data on mount, expose `add()`, `update()`, `remove()`, `reload()` methods
-- Hooks maintain local state and sync to AsyncStorage on mutations
-- Both hooks expose dual aliases for compatibility: `items`/`matches` and `items`/`trainings`
+**useDataStore Hook**: Central store exposing state and actions
+- State: `matches`, `trainings`, `isLoadingMatches`, `isLoadingTrainings`, `matchesError`, `trainingsError`
+- Match actions: `loadMatches()`, `addMatch()`, `updateMatch(id, partial)`, `removeMatch(id)`
+- Training actions: `loadTrainings()`, `addTraining()`, `updateTraining(id, partial)`, `removeTraining(id)`
+- Utility: `clearErrors()`, `reset()`
+- All mutations are async and include error handling
 
-**No Global State Library**: Each screen independently instantiates hooks. Data is not shared across screens in real-time. Screens must call `reload()` to refresh data.
+**Convenience Hooks**: `useMatches()` and `useTrainings()` (in `src/hooks/`)
+- Thin wrappers around Zustand store for backward compatibility
+- Auto-load data on mount
+- Expose methods: `add()`, `update()`, `remove()`, `load()`/`reload()`
+- Provide dual aliases: `items`/`matches` and `items`/`trainings`
+
+**Legacy Storage Service**: `src/services/storage.ts` still used for:
+- Form state persistence (`'lastSelections'`)
+- Draft saving (`'draft-${type}'`)
+- Other non-Zustand data
 
 ### Type System
 
@@ -81,6 +111,14 @@ import { Match } from '@/types';
 import { getItem } from '@/services/storage';
 ```
 
+**Babel Configuration**: Custom setup in `babel.config.js`
+- Path alias resolution: `@/` → `./src/`
+- Custom plugin (`babel-plugin-replace-import-meta.js`) to neutralize `import.meta` for Vite-friendly libraries:
+  - `import.meta.env.MODE` → `process.env.NODE_ENV`
+  - `import.meta.env` → `process.env`
+  - `import.meta` → `{}`
+- Preset: `babel-preset-expo`
+
 **Component Organization**:
 - `src/components/common/`: Reusable UI primitives (Button, Input, Card, Badge, Tooltip)
 - `src/components/quick-entry/`: Multi-step form components with voice input and templates
@@ -90,12 +128,24 @@ import { getItem } from '@/services/storage';
 
 **QuickEntryForm Pattern**: Complex form with multiple concerns
 - Remembers last selections (coach, location, partners, opponents) via AsyncStorage key `'lastSelections'`
-- Templates for common training/match scenarios
+- Templates for common training/match scenarios (quick templates for common drills/analysis patterns)
 - Voice input integration with basic NLP pattern matching
 - Wellness ratings (1-5 chips) + Performance sliders (0-100 converted to 1-5)
 - Draft saving capability
+- Uses `QuickPeopleSelector` component for coach/partner/opponent selection with autocomplete
+- Supports multiple training partners (array) vs single partner for matches
 
 ### Key Features
+
+**Progressive Web App (PWA)**: Full PWA implementation for installable web app
+- Service Worker: `public/sw.js` with cache-first strategy for offline support
+- Web Manifest: `public/manifest.json` with app metadata, icons, and shortcuts
+- Install Prompt: `src/components/common/PWAInstallPrompt.tsx` custom install UI
+- Offline Caching: Precaches critical assets, runtime caching for dynamic content
+- Auto-Updates: Version-based cache invalidation
+- iOS Support: Apple touch icons and splash screens configured
+- Android Support: Maskable icons for adaptive icon support
+- See `PWA_SETUP.md` for detailed configuration and deployment guide
 
 **Voice Input**: Uses `@react-native-voice/voice` package
 - Component: `src/components/quick-entry/VoiceInput.tsx`
@@ -114,6 +164,15 @@ import { getItem } from '@/services/storage';
 - `calcBasicStats()` computes totalMatches, winrate, totalTrainings
 
 ## Important Patterns & Conventions
+
+### Coding Style
+- Use functional React components with hooks
+- Two-space indentation
+- Explicit TypeScript annotations on complex props and hook return types
+- `PascalCase` for components/screens (e.g., `MatchReviewScreen.tsx`)
+- `camelCase` for hooks and helpers (e.g., `usePlayerFilters`)
+- `SCREAMING_SNAKE_CASE` for exported constants
+- Import via `@/` path alias (avoid long relative paths)
 
 ### Hook Update Pattern
 Both `useMatches()` and `useTrainings()` now expose an `update()` method:
@@ -134,10 +193,10 @@ const columns = layout.getGridColumns(); // 1, 2, or 3
 ```
 
 ### Storage Keys Convention
-- `'matches'`: Match[] array
-- `'trainings'`: Training[] array
+- `'padelbrain-storage'`: Zustand store (contains matches and trainings arrays)
 - `'lastSelections'`: LastSelections object (form field memory)
 - Draft keys use format: `'draft-${type}'` (e.g., 'draft-training')
+- Legacy keys `'matches'` and `'trainings'` are auto-migrated to Zustand on first load
 
 ## Common Tasks
 
@@ -154,12 +213,38 @@ const columns = layout.getGridColumns(); // 1, 2, or 3
 4. Update TypeScript `Route` type union
 
 ### Working with Storage
-Always use the hooks (`useMatches`, `useTrainings`) rather than directly calling storage service. The hooks ensure state and storage stay in sync.
+- For matches/trainings data: Use `useMatches()` or `useTrainings()` hooks (or access `useDataStore` directly)
+- For form state/drafts: Use the legacy `storage.ts` service (`getItem`, `setItem`, `removeItem`)
+- The Zustand store automatically handles persistence - no manual save/load needed for match/training data
 
 ## Build & Deployment Notes
 
 - Expo SDK version: 54.x
-- React Native: 0.73.6
+- React Native: 0.81.4
+- React: 19.1.0
 - TypeScript: 5.3+ (strict mode enabled)
+- Zustand: 5.0.8 (global state management)
 - No native code modification required (Expo managed workflow)
-- Pre-build hook runs `typecheck` to catch errors before builds
+- Electron: 33.4.1 for desktop builds
+- Uses `patch-package` for post-install patches (run via postinstall hook)
+
+### Platform-Specific Configuration (app.json)
+- **iOS**: Deployment target 15.1, requires microphone and speech recognition permissions for voice input
+- **Android**: Min SDK 24, Target/Compile SDK 35, requires RECORD_AUDIO and INTERNET permissions
+- **Web**: Metro bundler, single output mode, PWA-ready with manifest config
+
+### Commit Conventions
+- Follow Conventional Commits format: `feat:`, `fix:`, `refactor:`, etc.
+- Keep subject lines under 72 characters
+- Use scopes when practical (e.g., `feat(voice): add Spanish keyword matching`)
+
+### EAS Build (for native apps)
+```bash
+npm run eas:preview:ios         # Preview build for iOS
+npm run eas:preview:android     # Preview build for Android
+npm run eas:production:ios      # Production build for iOS
+npm run eas:production:android  # Production build for Android
+npm run eas:production:all      # Production build for all platforms
+npm run eas:submit:ios          # Submit iOS app
+npm run eas:submit:android      # Submit Android app
+```

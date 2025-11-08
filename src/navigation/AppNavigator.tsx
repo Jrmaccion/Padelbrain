@@ -11,6 +11,10 @@ import ReportsScreen from '@/screens/ReportsScreen';
 
 type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'Reports';
 
+interface Navigation {
+  navigate: (route: string) => void;
+}
+
 interface TabConfig {
   id: Route;
   label: string;
@@ -55,7 +59,7 @@ export default function AppNavigator() {
   };
 
   const renderScreen = () => {
-    const nav = { navigate: (r: Route) => setRoute(r) } as any;
+    const nav: Navigation = { navigate: (r: string) => setRoute(r as Route) };
     switch (route) {
       case 'Home':      return <HomeScreen navigation={nav} />;
       case 'Trainings': return <TrainingsScreen />;

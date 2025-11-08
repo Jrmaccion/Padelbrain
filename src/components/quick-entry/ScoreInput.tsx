@@ -18,6 +18,35 @@ export default function ScoreInput({ value, onChange, outcome, onOutcomeChange }
     { my: '', opp: '' }
   ]);
 
+  // Check if a set score is valid according to padel rules
+  const isValidSetScore = (my: number, opp: number): boolean => {
+    // Valid scores: 6-0, 6-1, 6-2, 6-3, 6-4, 7-5, 7-6
+    if (my === 6 && opp <= 4) return true;
+    if (opp === 6 && my <= 4) return true;
+    if (my === 7 && (opp === 5 || opp === 6)) return true;
+    if (opp === 7 && (my === 5 || my === 6)) return true;
+    return false;
+  };
+
+  // Check who's leading in sets won
+  const getSetsWon = (scores: Array<{ my: string; opp: string }>) => {
+    let mySets = 0;
+    let oppSets = 0;
+
+    scores.forEach(set => {
+      if (set.my && set.opp) {
+        const myScore = parseInt(set.my);
+        const oppScore = parseInt(set.opp);
+        if (!isNaN(myScore) && !isNaN(oppScore) && isValidSetScore(myScore, oppScore)) {
+          if (myScore > oppScore) mySets++;
+          else oppSets++;
+        }
+      }
+    });
+
+    return { mySets, oppSets };
+  };
+
   const updateScore = (setIndex: number, field: 'my' | 'opp', value: string) => {
     const newSetScores = [...setScores];
     newSetScores[setIndex] = { ...newSetScores[setIndex], [field]: value };
@@ -38,6 +67,13 @@ export default function ScoreInput({ value, onChange, outcome, onOutcomeChange }
     const oppScore = setScores[setIndex].opp;
     const hasScore = myScore || oppScore;
 
+    // Check if this set has both scores and if they're valid
+    const isComplete = myScore && oppScore;
+    const myNum = parseInt(myScore);
+    const oppNum = parseInt(oppScore);
+    const isValid = isComplete && !isNaN(myNum) && !isNaN(oppNum) && isValidSetScore(myNum, oppNum);
+    const isInvalid = isComplete && !isValid;
+
     const clearSet = () => {
       const newSetScores = [...setScores];
       newSetScores[setIndex] = { my: '', opp: '' };
@@ -51,9 +87,21 @@ export default function ScoreInput({ value, onChange, outcome, onOutcomeChange }
     };
 
     return (
-      <View style={styles.setContainer}>
+      <View style={[
+        styles.setContainer,
+        isValid && styles.setContainerValid,
+        isInvalid && styles.setContainerInvalid
+      ]}>
         <View style={styles.setHeader}>
-          <Text style={styles.setLabel}>Set {setNumber}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={styles.setLabel}>Set {setNumber}</Text>
+            {isInvalid && (
+              <Text style={styles.invalidBadge}>⚠️ Marcador inválido</Text>
+            )}
+            {isValid && (
+              <Text style={styles.validBadge}>✓</Text>
+            )}
+          </View>
           {hasScore && (
             <TouchableOpacity onPress={clearSet} style={styles.clearButton}>
               <Text style={styles.clearButtonText}>✕ Limpiar</Text>
@@ -199,7 +247,23 @@ export default function ScoreInput({ value, onChange, outcome, onOutcomeChange }
         <View style={styles.setsContainer}>
           <SetInput setNumber={1} />
           <SetInput setNumber={2} />
-          <SetInput setNumber={3} />
+          {(() => {
+            // Only show third set if match isn't decided after 2 sets
+            const { mySets, oppSets } = getSetsWon(setScores.slice(0, 2));
+            const matchDecided = mySets === 2 || oppSets === 2;
+
+            if (matchDecided) {
+              return (
+                <View style={styles.infoBox}>
+                  <Text style={styles.infoText}>
+                    ✓ Partido decidido en 2 sets. Tercer set no necesario.
+                  </Text>
+                </View>
+              );
+            }
+
+            return <SetInput setNumber={3} />;
+          })()}
         </View>
       )}
 
@@ -287,7 +351,17 @@ const styles = StyleSheet.create({
   setContainer: {
     backgroundColor: '#F8FAFC',
     borderRadius: 8,
-    padding: 12
+    padding: 12,
+    borderWidth: 2,
+    borderColor: 'transparent'
+  },
+  setContainerValid: {
+    borderColor: '#10B981',
+    backgroundColor: '#ECFDF5'
+  },
+  setContainerInvalid: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2'
   },
   setHeader: {
     flexDirection: 'row',
@@ -417,5 +491,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#1E3A8A'
+  },
+  invalidBadge: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#991B1B',
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4
+  },
+  validBadge: {
+    fontSize: 14,
+    color: '#059669'
+  },
+  infoBox: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#BFDBFE'
+  },
+  infoText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1E40AF',
+    textAlign: 'center'
   }
 });

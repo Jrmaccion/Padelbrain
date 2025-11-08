@@ -17,19 +17,36 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#3B82F6" />
 
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/pwa-64x64.png" />
+
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json" />
 
-  <!-- Note: Icons and splash screens should be added after generating assets -->
-  <!-- See ASSETS_REQUIRED.md for instructions -->
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192x192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512x512.png" />
+
+  <!-- Apple Splash Screens (basic fallback) -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-startup-image" href="/pwa-512x512.png" />
 
   <style>
-    html, body, #root {
+    html, body {
       width: 100%;
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    #root {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
     }
 
     body {
@@ -98,16 +115,32 @@
     });
 
     // Register Service Worker
-    if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
-          .then(function(registration) {
-            console.log('ServiceWorker registered:', registration.scope);
-          })
-          .catch(function(error) {
-            console.log('ServiceWorker registration failed:', error);
-          });
-      });
+    if ('serviceWorker' in navigator) {
+      // Allow service worker on HTTPS or localhost for development
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const isSecure = window.location.protocol === 'https:';
+
+      if (isSecure || isLocalhost) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('ServiceWorker registered:', registration.scope);
+
+              // Check for updates
+              registration.addEventListener('updatefound', function() {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New service worker available');
+                  }
+                });
+              });
+            })
+            .catch(function(error) {
+              console.log('ServiceWorker registration failed:', error);
+            });
+        });
+      }
     }
   </script>
 </body>

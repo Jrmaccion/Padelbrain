@@ -32,7 +32,7 @@
     },
     "android": {
       "package": "com.padelbrain.app",
-      "versionCode": 5,
+      "versionCode": 11,
       "icon": "./assets/android-icon.png",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -69,7 +69,8 @@
           "android": {
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "enableJetifier": true
           }
         }
       ]

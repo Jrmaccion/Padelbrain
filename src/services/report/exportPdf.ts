@@ -687,10 +687,12 @@ export async function exportActivityReportPDF(
   // Web: generar PDF usando printAsync con custom options
   if (Platform.OS === 'web') {
     try {
-      console.log('Starting PDF generation on web...');
-      console.log('Matches count:', matches.length);
-      console.log('Trainings count:', trainings.length);
-      console.log('HTML length:', html.length);
+      if (__DEV__) {
+        console.log('Starting PDF generation on web...');
+        console.log('Matches count:', matches.length);
+        console.log('Trainings count:', trainings.length);
+        console.log('HTML length:', html.length);
+      }
 
       // En web, Print.printToFileAsync a veces no funciona correctamente
       // Usaremos un enfoque híbrido: generar el HTML y usar window.print con configuración

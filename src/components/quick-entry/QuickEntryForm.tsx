@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import Card from '@/components/common/Card';
 import Input from '@/components/common/Input';
 import { Training, Match, Rating1to5 } from '@/types';
@@ -17,6 +17,8 @@ interface QuickEntryFormProps {
   onSubmit: (item: Training | Match) => void;
   onSaveDraft?: (item: Partial<Training | Match>) => void;
   draftData?: Partial<Training | Match>;
+  editMode?: boolean;
+  itemToEdit?: Training | Match;
 }
 
 interface LastSelections {
@@ -54,7 +56,8 @@ const QUICK_TEMPLATES: QuickTemplate[] = [
   },
 ];
 
-export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData }: QuickEntryFormProps) {
+export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData, editMode, itemToEdit }: QuickEntryFormProps) {
+  const isEditing = editMode && itemToEdit;
   // Básicos
   const [date, setDate] = useState(new Date().toISOString());
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
@@ -102,25 +105,34 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
     loadLastSelections();
   }, []);
 
-  // Load draft data if provided
+  // Load draft data or edit data if provided
   useEffect(() => {
-    if (draftData) {
+    if (itemToEdit && editMode) {
+      // Load existing item for editing
+      loadDraftIntoForm(itemToEdit);
+    } else if (draftData) {
+      // Load draft data
       loadDraftIntoForm(draftData);
     }
-  }, [draftData]);
+  }, [draftData, itemToEdit, editMode]);
 
   const loadLastSelections = async () => {
-    const last = await getItem<LastSelections>('lastSelections');
-    if (!last) return;
-    setLocation(last.location || '');
-    if (type === 'training') {
-      setCoach(last.coach || '');
-      setTrainingPartners(last.trainingPartners || []);
-    } else {
-      setOpponents(last.opponents || { right: '', left: '' });
-      setTournament(last.tournament || '');
-      setPartner(last.partner || '');
-      if (last.position) setPosition(last.position);
+    try {
+      const last = await getItem<LastSelections>('lastSelections');
+      if (!last) return;
+      setLocation(last.location || '');
+      if (type === 'training') {
+        setCoach(last.coach || '');
+        setTrainingPartners(last.trainingPartners || []);
+      } else {
+        setOpponents(last.opponents || { right: '', left: '' });
+        setTournament(last.tournament || '');
+        setPartner(last.partner || '');
+        if (last.position) setPosition(last.position);
+      }
+    } catch (error) {
+      // Silently fail - not critical if we can't load last selections
+      console.warn('Could not load last selections:', error);
     }
   };
 
@@ -175,16 +187,21 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
   };
 
   const saveLastSelections = async () => {
-    const selections: LastSelections = {
-      location,
-      coach: type === 'training' ? coach : undefined,
-      trainingPartners: type === 'training' ? trainingPartners : undefined,
-      opponents: type === 'match' ? opponents : undefined,
-      tournament: type === 'match' ? tournament : undefined,
-      partner: type === 'match' ? partner : undefined,
-      position: type === 'match' ? position : undefined,
-    };
-    await setItem('lastSelections', selections);
+    try {
+      const selections: LastSelections = {
+        location,
+        coach: type === 'training' ? coach : undefined,
+        trainingPartners: type === 'training' ? trainingPartners : undefined,
+        opponents: type === 'match' ? opponents : undefined,
+        tournament: type === 'match' ? tournament : undefined,
+        partner: type === 'match' ? partner : undefined,
+        position: type === 'match' ? position : undefined,
+      };
+      await setItem('lastSelections', selections);
+    } catch (error) {
+      // Silently fail - not critical if we can't save last selections
+      console.warn('Could not save last selections:', error);
+    }
   };
 
   const applyTemplate = (templateId: string) => {
@@ -246,29 +263,50 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
     };
 
     if (type === 'training') {
-      Object.assign(draft, {
+      const trainingDraft = draft as Partial<Training>;
+      Object.assign(trainingDraft, {
         coach: coach || undefined,
         goals: goals.length ? goals : undefined,
+        trainingPartners: trainingPartners.length ? trainingPartners : undefined,
       });
-      (draft as any).trainingPartners = trainingPartners.length ? trainingPartners : undefined;
     } else {
-      Object.assign(draft, {
+      const matchDraft = draft as Partial<Match>;
+      Object.assign(matchDraft, {
         tournament: tournament || undefined,
         opponents: opponents.right || opponents.left ? opponents : undefined,
         result: score ? { outcome, score } : undefined,
+        partner: partner || undefined,
+        position: position || undefined,
       });
-      (draft as any).partner = partner || undefined;
-      (draft as any).position = position || undefined;
     }
 
     onSaveDraft(draft);
   };
 
+  // Helper to safely convert slider values (0-100) to ratings (1-5)
+  const validateRating = (value: number): Rating1to5 => {
+    const rating = Math.round(value / 20);
+    return Math.max(1, Math.min(5, rating)) as Rating1to5;
+  };
+
   const handleSubmit = async () => {
+    // Validate date format
+    try {
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) {
+        Alert.alert('Error', 'Fecha inválida');
+        return;
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Formato de fecha inválido');
+      return;
+    }
+
     await saveLastSelections();
 
+    // Use existing ID in edit mode, generate new ID for new entries
     const base = {
-      id: uuidv4(),
+      id: isEditing ? itemToEdit.id : uuidv4(),
       date,
       location: location || undefined,
       sleep,
@@ -285,16 +323,16 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
         ...base,
         coach: coach || undefined,
         goals: goals.length ? goals : undefined,
+        trainingPartners: trainingPartners.length ? trainingPartners : undefined,
         postReview: {
-          technical: Math.round(technical / 20) as Rating1to5,
-          tactical: Math.round(tactical / 20) as Rating1to5,
-          mental: Math.round(mental / 20) as Rating1to5,
-          physical: Math.round(physical / 20) as Rating1to5,
+          technical: validateRating(technical),
+          tactical: validateRating(tactical),
+          mental: validateRating(mental),
+          physical: validateRating(physical),
           learned: learned || undefined,
           improveNext: diffNextTime || undefined,
         },
       };
-      (training as any).trainingPartners = trainingPartners.length ? trainingPartners : undefined;
 
       onSubmit(training);
     } else {
@@ -310,15 +348,15 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
           learned: learned || undefined,
         } : undefined,
         ratings: {
-          technical: Math.round(technical / 20) as Rating1to5,
-          tactical: Math.round(tactical / 20) as Rating1to5,
-          mental: Math.round(mental / 20) as Rating1to5,
-          physical: Math.round(physical / 20) as Rating1to5,
+          technical: validateRating(technical),
+          tactical: validateRating(tactical),
+          mental: validateRating(mental),
+          physical: validateRating(physical),
         },
         keywords: keywords.length ? keywords : undefined,
+        partner: partner || undefined,
+        position: position || undefined,
       };
-      (match as any).partner = partner || undefined;
-      (match as any).position = position || undefined;
 
       onSubmit(match);
     }
@@ -499,25 +537,50 @@ export default function QuickEntryForm({ type, onSubmit, onSaveDraft, draftData 
           <VoiceInput onResult={handleVoiceResult} value={voiceSummary} placeholder="Toca el micrófono y cuenta qué tal fue..." />
         </View>
 
-        {/* Avanzadas */}
+        {/* Reflexiones (Opciones avanzadas) */}
         <TouchableOpacity onPress={() => setShowAdvanced(!showAdvanced)} style={styles.advancedToggle}>
-          <Text style={styles.advancedToggleText}>{showAdvanced ? '▼' : '▶'} Opciones avanzadas</Text>
+          <Text style={styles.advancedToggleText}>{showAdvanced ? '▼' : '▶'} Reflexiones y aprendizajes</Text>
         </TouchableOpacity>
 
         {showAdvanced && (
           <View style={styles.section}>
-            <Input placeholder="¿Qué aprendí?" value={learned} onChangeText={setLearned} multiline numberOfLines={2} style={styles.input} />
-            <Input placeholder="¿Qué haría diferente?" value={diffNextTime} onChangeText={setDiffNextTime} multiline numberOfLines={2} style={styles.input} />
+            <Text style={styles.sectionTitle}>💭 Reflexión Post-Actividad</Text>
+            <Text style={styles.hint}>Opcional: Captura tus aprendizajes y áreas de mejora</Text>
+            <Input
+              placeholder="¿Qué aprendí? (ej: mejor control de profundidad en globos)"
+              value={learned}
+              onChangeText={setLearned}
+              multiline
+              numberOfLines={2}
+              style={styles.input}
+              accessibilityLabel="¿Qué aprendí?"
+              accessibilityHint="Escribe los aprendizajes clave de esta sesión"
+            />
+            <Input
+              placeholder="¿Qué haría diferente la próxima vez? (ej: calentar más tiempo)"
+              value={diffNextTime}
+              onChangeText={setDiffNextTime}
+              multiline
+              numberOfLines={2}
+              style={styles.input}
+              accessibilityLabel="¿Qué haría diferente?"
+              accessibilityHint="Anota qué cambiarías en futuras sesiones"
+            />
           </View>
         )}
 
         {/* Acciones */}
+        <Text style={styles.hint}>
+          Borrador: guarda para continuar después. Guardar: registra la actividad completada.
+        </Text>
         <View style={styles.actions}>
           <TouchableOpacity style={[styles.button, styles.draftButton]} onPress={saveDraft} activeOpacity={0.7}>
             <Text style={styles.buttonText}>💾 Guardar Borrador</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.button, styles.submitButton]} onPress={handleSubmit} activeOpacity={0.7}>
-            <Text style={styles.buttonText}>✅ Guardar</Text>
+            <Text style={styles.buttonText}>
+              {isEditing ? '✏️ Actualizar' : '✅ Guardar'} {type === 'training' ? 'Entrenamiento' : 'Partido'}
+            </Text>
           </TouchableOpacity>
         </View>
       </Card>

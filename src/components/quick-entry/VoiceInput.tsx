@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, Platform } from 'react-native';
+import Voice from '@react-native-voice/voice';
 
 interface VoiceInputProps {
   onResult: (text: string) => void;
@@ -47,93 +48,184 @@ export default function VoiceInput({ onResult, value, placeholder }: VoiceInputP
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState(value);
   const [error, setError] = useState<string | null>(null);
-  const [isSupported, setIsSupported] = useState(true);
+  const [isSupported, setIsSupported] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
+  // Native Voice Setup (Android/iOS)
   useEffect(() => {
-    // Verificar si el navegador soporta Web Speech API
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      setIsSupported(false);
-      setError('Tu navegador no soporta reconocimiento de voz. Usa Chrome, Edge o Safari.');
-      return;
-    }
+    if (Platform.OS !== 'web') {
+      // Setup react-native-voice for Android/iOS
+      setIsSupported(true);
 
-    // Crear instancia de reconocimiento
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'es-ES';
+      Voice.onSpeechStart = () => {
+        setIsRecording(true);
+        setError(null);
+      };
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
+      Voice.onSpeechEnd = () => {
+        setIsRecording(false);
+      };
 
-      for (let i = event.results.length - 1; i >= 0; i--) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript = result[0].transcript;
-        } else {
-          interimTranscript = result[0].transcript;
+      Voice.onSpeechResults = (e) => {
+        if (e.value && e.value.length > 0) {
+          const newText = e.value[0];
+          setTranscription(prev => {
+            const updated = prev ? prev + ' ' + newText : newText;
+            onResult(updated);
+            return updated;
+          });
         }
+      };
+
+      Voice.onSpeechPartialResults = (e) => {
+        if (e.value && e.value.length > 0) {
+          const partialText = e.value[0];
+          setTranscription(prev => {
+            const updated = prev ? prev + ' ' + partialText : partialText;
+            return updated;
+          });
+        }
+      };
+
+      Voice.onSpeechError = (e) => {
+        console.error('Voice error:', e);
+        setError('Error en reconocimiento de voz');
+        setIsRecording(false);
+      };
+
+      return () => {
+        Voice.destroy().then(Voice.removeAllListeners);
+      };
+    }
+  }, []);
+
+  // Web Speech API Setup
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      if (typeof window === 'undefined') {
+        setIsSupported(false);
+        setError('El reconocimiento de voz solo está disponible en la versión web.');
+        return;
       }
 
-      const text = finalTranscript || interimTranscript;
-      if (text) {
-        setTranscription(prevText => {
-          const newText = prevText ? prevText + ' ' + text : text;
-          onResult(newText);
-          return newText;
-        });
+      // Verificar si el navegador soporta Web Speech API
+      const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognitionCtor) {
+        setIsSupported(false);
+        setError('Tu navegador no soporta reconocimiento de voz. Usa Chrome, Edge o Safari.');
+        return;
       }
-    };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('Error de reconocimiento:', event.error);
-setError(`Error: ${event.error}`);
-      setIsRecording(false);
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      let recognition: SpeechRecognition;
+      try {
+        recognition = new SpeechRecognitionCtor();
+      } catch (e) {
+        console.error('No se pudo inicializar SpeechRecognition:', e);
+        setIsSupported(false);
+        setError('El reconocimiento de voz no está disponible en este contexto.');
+        return;
       }
-    };
+
+      setIsSupported(true);
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'es-ES';
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = event.results.length - 1; i >= 0; i--) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript = result[0].transcript;
+          } else {
+            interimTranscript = result[0].transcript;
+          }
+        }
+
+        const text = finalTranscript || interimTranscript;
+        if (text) {
+          setTranscription(prevText => {
+            const newText = prevText ? prevText + ' ' + text : text;
+            onResult(newText);
+            return newText;
+          });
+        }
+      };
+
+      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('Error de reconocimiento:', event.error);
+        setError(`Error: ${event.error}`);
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+
+      return () => {
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
+      };
+    }
   }, []);
 
   useEffect(() => {
     setTranscription(value);
   }, [value]);
 
-  const startRecording = () => {
-    if (!recognitionRef.current) return;
-    
-    try {
-      setError(null);
-      recognitionRef.current.start();
-      setIsRecording(true);
-    } catch (e) {
-      setError('Error al iniciar grabación');
-      console.error(e);
+  const startRecording = async () => {
+    if (Platform.OS === 'web') {
+      // Web Speech API
+      if (!recognitionRef.current) return;
+
+      try {
+        setError(null);
+        recognitionRef.current.start();
+        setIsRecording(true);
+      } catch (e) {
+        setError('Error al iniciar grabación');
+        console.error(e);
+      }
+    } else {
+      // Native Voice (Android/iOS)
+      try {
+        setError(null);
+        await Voice.start('es-ES');
+        setIsRecording(true);
+      } catch (e) {
+        setError('Error al iniciar grabación');
+        console.error(e);
+      }
     }
   };
 
-  const stopRecording = () => {
-    if (!recognitionRef.current) return;
-    
-    try {
-      recognitionRef.current.stop();
-      setIsRecording(false);
-    } catch (e) {
-      setError('Error al detener grabación');
-      console.error(e);
+  const stopRecording = async () => {
+    if (Platform.OS === 'web') {
+      // Web Speech API
+      if (!recognitionRef.current) return;
+
+      try {
+        recognitionRef.current.stop();
+        setIsRecording(false);
+      } catch (e) {
+        setError('Error al detener grabación');
+        console.error(e);
+      }
+    } else {
+      // Native Voice (Android/iOS)
+      try {
+        await Voice.stop();
+        setIsRecording(false);
+      } catch (e) {
+        setError('Error al detener grabación');
+        console.error(e);
+      }
     }
   };
 
@@ -172,25 +264,25 @@ setError(`Error: ${event.error}`);
           <Text style={styles.micIcon}>{isRecording ? '⏹' : '🎤'}</Text>
         </TouchableOpacity>
       </View>
-      
+
       {isRecording && (
         <View style={styles.recordingIndicator}>
           <View style={styles.pulsingDot} />
           <Text style={styles.recordingText}>Escuchando...</Text>
         </View>
       )}
-      
+
       {error && (
         <Text style={styles.errorText}>{error}</Text>
       )}
-      
+
       {isSupported && (
         <Text style={styles.hint}>
-          💡 Puedes dictar libremente. La IA extraerá automáticamente marcador, fortalezas, debilidades y más.
+          💡 Dicta libremente. El sistema reconocerá palabras clave como marcador, fortalezas y debilidades.
         </Text>
       )}
-      
-      {!isSupported && (
+
+      {!isSupported && Platform.OS === 'web' && (
         <Text style={styles.hint}>
           ℹ️ Usa Chrome, Edge o Safari para activar el reconocimiento de voz.
         </Text>

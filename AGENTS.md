@@ -1,20 +1,33 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-PadelBrain is an Expo + TypeScript app. `App.tsx` wires the Safe Area layout, error boundary, and navigation stack. Source lives in `src/`: `components/` for reusable UI, `screens/` for route-level views, `navigation/` for stacks and tabs, `store/` for Zustand state, and domain helpers in `services/`, `schemas/`, and `utils/`. Tests sit in `__tests__/`; assets in `assets/`; platform scaffolding in `public/`, `android/`, and `electron/`.
+- `App.tsx` wires the Safe Area shell, error boundary, and navigation stack; treat it as the entry point for providers.
+- Feature code lives in `src/`: shared UI in `src/components/`, screens in `src/screens/`, navigation stacks in `src/navigation/`, Zustand stores in `src/store/`, and domain helpers in `src/services/`, `src/schemas/`, and `src/utils/`.
+- Tests sit either under `__tests__/` or beside the feature under test; assets live in `assets/`; platform scaffolding resides in `android/`, `public/`, and `electron/`.
 
-## Build, Test & Development Commands
-- `npm run start` launches Expo Go with hot reload; use `npm run web`, `npm run android`, or `npm run ios` for platform-specific entry points.
-- `npm run typecheck` (aliased by `npm run validate`) runs the TypeScript compiler in strict mode; keep it green before committing.
-- `npm run prebuild` generates native projects; `npm run prebuild:clean` forces a fresh sync when native config drifts.
-- `npm run build:web` exports the web bundle; pair it with `npm run build:electron[:platform]` for desktop packages.
-- `npm run electron:dev` boots the desktop shell against the local web build.
+## Build, Test, and Development Commands
+- `npm run start` launches Expo Go with hot reload; target specific platforms with `npm run web`, `npm run android`, or `npm run ios`.
+- `npm run typecheck` (alias `npm run validate`) runs `tsc` in strict mode; it must pass before merging.
+- `npm run prebuild` syncs native projects; run `npm run prebuild:clean` when native config drifts.
+- `npm run build:web` creates the production web bundle; chain with `npm run build:electron[:platform]` to package desktop builds.
+- `npm run electron:dev` boots the desktop shell wired to the local web server for manual smoke tests.
 
 ## Coding Style & Naming Conventions
-Write modern functional React components with two-space indentation and TypeScript annotations. Use `PascalCase` for components/screens (`MatchReviewScreen.tsx`), `camelCase` for functions/hooks (`usePlayerFilters`), and `SCREAMING_SNAKE_CASE` for exported constants. Import shared modules through the `@/` alias (`import { colors } from '@/constants/colors'`). Run real lint/format scripts locally once the placeholders in `package.json` are replaced, and keep formatting changes isolated.
+- Use functional React components, two-space indentation, and explicit TypeScript annotations on complex props or hooks.
+- Adopt `PascalCase` for components/screens (`MatchReviewScreen.tsx`), `camelCase` for hooks and helpers (`usePlayerFilters`), and `SCREAMING_SNAKE_CASE` for exported constants.
+- Import shared modules through the `@/` alias (`import { colors } from '@/constants/colors'`), and avoid wide relative paths.
+- Keep formatting-only changes isolated and run the real lint/format scripts once the placeholders in `package.json` are replaced.
 
 ## Testing Guidelines
-Jest is scaffolded but minimal; add `.test.ts`/`.test.tsx` files under `__tests__/` or colocated with the feature. Mirror feature names (`MatchCard.test.tsx`) and assert happy paths plus edge cases, especially for Zustand actions and `services/` helpers. Until full tests land, treat `npm run typecheck` and manual smoke tests across Expo platforms as the regression gate, and note any gaps in the PR description.
+- Rely on Jest; add `.test.ts` or `.test.tsx` files under `__tests__/` or colocated with the feature (`MatchCard.test.tsx`).
+- Cover happy paths plus edge scenarios, especially for Zustand actions and `services/` helpers. Document untested cases in PR descriptions.
+- Treat `npm run typecheck` as the baseline regression gate and manually smoke-test across Expo platforms before sign-off.
 
 ## Commit & Pull Request Guidelines
-Commits follow Conventional Commits (`feat: añadir método update() a hooks`, `fix: corregir emojis UTF-8`). Keep subjects under 72 characters, present-tense, and scoped when practical. For PRs, include a concise summary, linked issues, per-platform test notes (`web`, `android`, `electron`), and screenshots for UI updates. Call out new config or environment steps so reviewers can reproduce after `npm install` and the relevant script above.
+- Follow Conventional Commits (`feat: add match filters`, `fix: correct UTF-8 encoding`), keep subjects under 72 characters, and scope when practical.
+- PRs should include a concise summary, linked issues, per-platform test notes (`web`, `android`, `electron`), and screenshots or recordings for UI updates.
+- Call out any new configuration or environment steps so reviewers can reproduce after `npm install` and the relevant command above.
+
+## Security & Configuration Tips
+- Store secrets in environment files (e.g., `.env`) and never commit them; reference required keys in documentation or PR notes.
+- Verify that generated native files remain in sync after `npm run prebuild`; commit changes that affect build outputs or configs.*** End Patch

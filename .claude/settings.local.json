@@ -12,7 +12,20 @@
       "Bash(npm view:*)",
       "Bash(timeout:*)",
       "Bash(npx expo start:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(echo:*)",
+      "Read(//c/Users/jaime/AppData/Local/Android/Sdk/**)",
+      "Bash(else echo \"SDK directory does NOT exist\")",
+      "Bash(fi)",
+      "Bash(.gradlew:*)",
+      "Bash(./gradlew:*)",
+      "Bash(npm run eas:production:android:*)",
+      "Bash(npx eas-cli:*)",
+      "Bash(keytool -list -v -keystore /c/padelbrain/android/app/debug.keystore -storepass android -alias androiddebugkey:*)",
+      "Bash(keytool -list:*)",
+      "Read(//c/Users/jaime/**)",
+      "Bash(cp:*)",
+      "Bash(npm run verify:pwa:*)"
     ],
     "deny": [],
     "ask": []

@@ -188,7 +188,7 @@ export async function saveDraftFromForm(
   data: Partial<Training | Match>
 ): Promise<void> {
   const drafts = await getItem<Draft[]>(DRAFTS_KEY) || [];
-  
+
   const newDraft: Draft = {
     id: Date.now().toString(),
     type,
@@ -198,6 +198,39 @@ export async function saveDraftFromForm(
 
   const updatedDrafts = [...drafts, newDraft];
   await setItem(DRAFTS_KEY, updatedDrafts);
+
+  Alert.alert(
+    '💾 Borrador guardado',
+    'Tu progreso se ha guardado. Puedes continuar desde la sección "Borradores" cuando quieras.',
+    [{ text: 'Entendido' }]
+  );
+}
+
+// Exportar función para convertir un registro completo en borrador
+export async function resetToDraft(
+  type: 'training' | 'match',
+  item: Training | Match
+): Promise<void> {
+  const drafts = await getItem<Draft[]>(DRAFTS_KEY) || [];
+
+  // Remove the id to make it a partial (draft)
+  const { id, ...itemWithoutId } = item;
+
+  const newDraft: Draft = {
+    id: Date.now().toString(),
+    type,
+    data: itemWithoutId,
+    createdAt: new Date().toISOString()
+  };
+
+  const updatedDrafts = [...drafts, newDraft];
+  await setItem(DRAFTS_KEY, updatedDrafts);
+
+  Alert.alert(
+    '📝 Convertido a borrador',
+    'El registro se ha convertido en borrador. Se ha eliminado de tu historial y puedes editarlo desde "Borradores".',
+    [{ text: 'Entendido' }]
+  );
 }
 
 const styles = StyleSheet.create({

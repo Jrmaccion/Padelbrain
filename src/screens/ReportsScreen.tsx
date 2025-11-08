@@ -7,6 +7,7 @@ import { useTrainings } from '@/hooks/useTrainings';
 import { useResponsive } from '@/constants/layout';
 import DateRangeExportButton from '@/components/report/DateRangeExportButton';
 import { exportPdfAndShare } from '@/services/report/exportPdf';
+import { exportToCsv } from '@/services/report/exportCsv';
 
 export default function ReportsScreen() {
   const { items: matches } = useMatches();
@@ -50,6 +51,27 @@ export default function ReportsScreen() {
     }
   };
 
+  const exportCsvLast30Days = async () => {
+    try {
+      await exportToCsv(matches, trainings, {
+        title: 'Exportación CSV (30 días)',
+        from: fromISO,
+        to: toISO,
+        includeMatches: true,
+        includeTrainings: true,
+        filename: 'PadelBrain-Export-30dias',
+      });
+      setLastInfo(`CSV generado ${new Date().toLocaleString()}`);
+      if (Platform.OS === 'web') {
+        Alert.alert('CSV descargado', 'El archivo CSV se ha descargado correctamente.');
+      } else {
+        Alert.alert('CSV generado', 'CSV creado. Se ha abierto el diálogo de compartir.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e?.message ?? 'No se pudo generar el CSV');
+    }
+  };
+
   const isWeb = () => Platform.OS === 'web'; // ✅ como función
 
   return (
@@ -77,7 +99,7 @@ export default function ReportsScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.title}>🧾 Exportar informe</Text>
+          <Text style={styles.title}>🧾 Exportar informe PDF</Text>
           <Text style={[styles.p, styles.muted]}>
             Genera un PDF con tus partidos y entrenamientos de un rango de fechas.
           </Text>
@@ -105,6 +127,19 @@ export default function ReportsScreen() {
           {lastInfo ? (
             <Text style={[styles.p, styles.muted]}>{lastInfo}</Text>
           ) : null}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.title}>📊 Exportar datos CSV</Text>
+          <Text style={[styles.p, styles.muted]}>
+            Descarga tus datos en formato CSV para análisis en Excel, Google Sheets u otras herramientas.
+          </Text>
+
+          <View style={styles.grid}>
+            <TouchableOpacity style={[styles.btn, styles.btnCsv]} onPress={exportCsvLast30Days}>
+              <Text style={styles.btnText}>📥 Descargar CSV (últimos 30 días)</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -137,5 +172,6 @@ const styles = StyleSheet.create({
   },
   btnAlt: { backgroundColor: '#10B981', borderLeftColor: '#10B981' },
   btnAlt2: { backgroundColor: '#F59E0B', borderLeftColor: '#F59E0B' },
+  btnCsv: { backgroundColor: '#8B5CF6', borderLeftColor: '#8B5CF6' },
   btnText: { color: '#FFFFFF', fontWeight: '700', textAlign: 'center' },
 });

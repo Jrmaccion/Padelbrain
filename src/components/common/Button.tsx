@@ -6,14 +6,18 @@ interface ButtonProps {
   style?: ViewStyle | ViewStyle[];  // Ahora acepta array también
   textStyle?: TextStyle | TextStyle[];
   disabled?: boolean;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
-export default function Button({ 
-  title, 
-  onPress, 
-  style, 
+export default function Button({
+  title,
+  onPress,
+  style,
   textStyle,
-  disabled = false 
+  disabled = false,
+  accessibilityLabel,
+  accessibilityHint
 }: ButtonProps) {
   return (
     <TouchableOpacity
@@ -25,6 +29,10 @@ export default function Button({
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled }}
     >
       <Text style={[styles.text, textStyle, disabled && styles.disabledText]}>
         {title}

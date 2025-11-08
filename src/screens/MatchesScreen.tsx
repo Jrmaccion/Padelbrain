@@ -1,13 +1,15 @@
-﻿import { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, ViewStyle, TextStyle, ImageStyle, Platform } from 'react-native';
+﻿import { useState, useEffect, useMemo } from 'react';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal, ViewStyle, TextStyle, ImageStyle, Platform, Alert } from 'react-native';
 import Header from '@/components/common/Header';
 import MatchList from '@/components/matches/MatchList';
 import QuickEntryForm from '@/components/quick-entry/QuickEntryForm';
-import DraftManager, { saveDraftFromForm } from '@/components/quick-entry/DraftManager';
+import DraftManager, { saveDraftFromForm, resetToDraft } from '@/components/quick-entry/DraftManager';
 import { useDataStore } from '@/store/useDataStore';
 import { Match } from '@/types';
 import { useResponsive } from '@/constants/layout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import SearchBar from '@/components/common/SearchBar';
+import FilterButton, { FilterOption } from '@/components/common/FilterButton';
 
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
 
@@ -18,12 +20,19 @@ export default function MatchesScreen() {
     matchesError,
     loadMatches: load,
     addMatch: add,
+    updateMatch: update,
     removeMatch: remove,
     clearErrors
   } = useDataStore();
   const [showForm, setShowForm] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [draftData, setDraftData] = useState<Partial<Match> | undefined>(undefined);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [outcomeFilter, setOutcomeFilter] = useState<string[]>([]);
+  const [locationFilter, setLocationFilter] = useState<string[]>([]);
 
   const { deviceType, layout: responsiveLayout } = useResponsive();
 
@@ -32,10 +41,38 @@ export default function MatchesScreen() {
   }, [load]);
 
   const handleSubmit = async (match: Match) => {
-    await add(match);
-    if (!matchesError) {
-      setShowForm(false);
+    if (editingMatch) {
+      // Update existing match
+      await update(match.id, match);
+      if (!matchesError) {
+        setShowForm(false);
+        setEditingMatch(null);
+        setSelectedMatch(null);
+        Alert.alert(
+          '✅ Partido actualizado',
+          'Los cambios se han guardado correctamente.',
+          [{ text: 'OK' }]
+        );
+      }
+    } else {
+      // Create new match
+      await add(match);
+      if (!matchesError) {
+        setShowForm(false);
+        Alert.alert(
+          '✅ Partido guardado',
+          'El partido se ha registrado correctamente en tu historial.',
+          [{ text: 'OK' }]
+        );
+      }
     }
+  };
+
+  const handleEdit = (match: Match) => {
+    setEditingMatch(match);
+    setSelectedMatch(null);
+    setDraftData(undefined);
+    setShowForm(true);
   };
 
   const handleSaveDraft = async (draft: Partial<Match>) => {
@@ -63,6 +100,79 @@ export default function MatchesScreen() {
       }
     }
   };
+
+  const handleResetToDraft = async () => {
+    if (!selectedMatch) return;
+
+    Alert.alert(
+      'Convertir a borrador',
+      '¿Quieres convertir este partido en borrador? Se eliminará del historial y podrás editarlo desde "Borradores".',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Convertir',
+          onPress: async () => {
+            await resetToDraft('match', selectedMatch);
+            await remove(selectedMatch.id);
+            if (!matchesError) {
+              setSelectedMatch(null);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Extract unique filter options
+  const outcomeOptions: FilterOption[] = useMemo(() => [
+    { label: 'Victoria', value: 'won', count: items.filter(m => m.result?.outcome === 'won').length },
+    { label: 'Derrota', value: 'lost', count: items.filter(m => m.result?.outcome === 'lost').length },
+  ], [items]);
+
+  const locationOptions: FilterOption[] = useMemo(() => {
+    const locations = new Set(items.map(m => m.location).filter((loc): loc is string => Boolean(loc)));
+    return Array.from(locations).map(loc => ({
+      label: loc,
+      value: loc,
+      count: items.filter(m => m.location === loc).length
+    }));
+  }, [items]);
+
+  // Filter matches based on search and filters
+  const filteredMatches = useMemo(() => {
+    return items.filter(match => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const searchableText = [
+          match.location,
+          match.tournament,
+          match.opponents?.right,
+          match.opponents?.left,
+          match.partner,
+          match.result?.score,
+          match.notes,
+          ...(match.strengths || []),
+          ...(match.weaknesses || []),
+          ...(match.keywords || [])
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        if (!searchableText.includes(query)) return false;
+      }
+
+      // Outcome filter
+      if (outcomeFilter.length > 0) {
+        if (!outcomeFilter.includes(match.result?.outcome || '')) return false;
+      }
+
+      // Location filter
+      if (locationFilter.length > 0) {
+        if (!locationFilter.includes(match.location || '')) return false;
+      }
+
+      return true;
+    });
+  }, [items, searchQuery, outcomeFilter, locationFilter]);
 
   const wins = items.filter((m) => m.result?.outcome === 'won').length;
   const losses = items.filter((m) => m.result?.outcome === 'lost').length;
@@ -92,7 +202,7 @@ export default function MatchesScreen() {
         </View>
       )}
 
-      <View style={styles.headerActions}>
+      <View style={styles.headerActionsContainer}>
         <TouchableOpacity style={styles.addButton} onPress={() => setShowForm(!showForm)}>
           <Text style={styles.addButtonText}>{showForm ? '✕ Cerrar' : '+ Nuevo Partido'}</Text>
         </TouchableOpacity>
@@ -108,6 +218,8 @@ export default function MatchesScreen() {
               onSubmit={handleSubmit}
               onSaveDraft={handleSaveDraft}
               draftData={draftData}
+              editMode={!!editingMatch}
+              itemToEdit={editingMatch || undefined}
             />
           </View>
         )}
@@ -131,10 +243,43 @@ export default function MatchesScreen() {
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Historial</Text>
+        {/* Search and Filter Section */}
+        <View style={styles.searchFilterContainer}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Buscar por rival, lugar, torneo..."
+            style={styles.searchBar}
+          />
+          <View style={styles.filterRow}>
+            <FilterButton
+              label="Resultado"
+              options={outcomeOptions}
+              selectedValues={outcomeFilter}
+              onSelect={setOutcomeFilter}
+            />
+            {locationOptions.length > 0 && (
+              <FilterButton
+                label="Lugar"
+                options={locationOptions}
+                selectedValues={locationFilter}
+                onSelect={setLocationFilter}
+              />
+            )}
+          </View>
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Historial</Text>
+          {(searchQuery || outcomeFilter.length > 0 || locationFilter.length > 0) && (
+            <Text style={styles.resultCount}>
+              {filteredMatches.length} de {items.length}
+            </Text>
+          )}
+        </View>
 
         <MatchList
-          items={items}
+          items={filteredMatches}
           onItemPress={handleItemPress}
         />
       </ScrollView>
@@ -147,11 +292,22 @@ export default function MatchesScreen() {
                 <Text style={styles.backButtonText}>← Volver</Text>
               </TouchableOpacity>
               <Text style={styles.modalTitle}>Análisis</Text>
-              <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>🗑️</Text>
-              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity onPress={() => handleEdit(selectedMatch)} style={styles.editButton}>
+                  <Text style={styles.editButtonText}>✏️</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleResetToDraft} style={styles.draftButton}>
+                  <Text style={styles.draftButtonText}>📝</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+                  <Text style={styles.deleteButtonText}>🗑️</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <ScrollView style={styles.modalContent}>
+            <ScrollView
+              style={styles.modalContent}
+              contentContainerStyle={styles.modalContentContainer}
+            >
               <MatchDetailView match={selectedMatch as unknown as UIMatch} />
             </ScrollView>
           </View>
@@ -404,7 +560,7 @@ const baseStyles = StyleSheet.create({
   errorText: { fontSize: 14, color: '#991B1B', fontWeight: '600', flex: 1 },
   errorDismiss: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FCA5A5', justifyContent: 'center', alignItems: 'center' },
   errorDismissText: { fontSize: 16, color: '#7F1D1D', fontWeight: '700' },
-  headerActions: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
+  headerActionsContainer: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E2E8F0' },
   addButton: { backgroundColor: '#3B82F6', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8, alignItems: 'center' },
   addButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
   content: {
@@ -431,9 +587,15 @@ const baseStyles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: '700', color: '#1E293B' },
   backButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, backgroundColor: '#F1F5F9' },
   backButtonText: { fontSize: 15, fontWeight: '600', color: '#475569' },
+  headerActions: { flexDirection: 'row', gap: 8 },
+  editButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#DBEAFE', justifyContent: 'center', alignItems: 'center' },
+  editButtonText: { fontSize: 20 },
+  draftButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEF3C7', justifyContent: 'center', alignItems: 'center' },
+  draftButtonText: { fontSize: 20 },
   deleteButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#FEE2E2', justifyContent: 'center', alignItems: 'center' },
   deleteButtonText: { fontSize: 20 },
   modalContent: { flex: 1, padding: 16 },
+  modalContentContainer: { paddingBottom: 40 },
   detailContainer: { gap: 16 },
   resultBanner: { padding: 20, borderRadius: 12, alignItems: 'center', marginBottom: 8 },
   resultBannerText: { fontSize: 24, fontWeight: '700', letterSpacing: 2 },
@@ -489,7 +651,14 @@ const additionalStyles: NamedStyles<any> = {
   ratingValue: { fontSize: 13, fontWeight: '700', color: '#64748B', marginLeft: 8 },
 
   // Responsive
-  statsContainerWide: { flexDirection: 'row', flexWrap: 'wrap' }, // ⬅️ NUEVO
+  statsContainerWide: { flexDirection: 'row', flexWrap: 'wrap' },
+
+  // Search and Filter
+  searchFilterContainer: { marginBottom: 16, gap: 12 },
+  searchBar: { width: '100%' },
+  filterRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  resultCount: { fontSize: 14, color: '#64748B', fontWeight: '500' },
 };
 
 const styles = { ...baseStyles, ...additionalStyles } as const;

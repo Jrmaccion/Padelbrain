@@ -1,36 +1,55 @@
 // Service Worker for PadelBrain PWA
-const CACHE_NAME = 'padelbrain-v1.0.0';
-const RUNTIME_CACHE = 'padelbrain-runtime';
+const CACHE_NAME = 'padelbrain-v1.0.1';
+const RUNTIME_CACHE = 'padelbrain-runtime-v1';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/favicon.svg',
+  '/favicon.png',
   '/pwa-64x64.png',
   '/pwa-192x192.png',
-  '/pwa-512x512.png'
+  '/pwa-512x512.png',
+  '/pwa-512x512-maskable.png'
 ];
 
 // Install event - precache assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting())
+      .then((cache) => {
+        console.log('[SW] Caching app shell');
+        return cache.addAll(PRECACHE_ASSETS);
+      })
+      .then(() => {
+        console.log('[SW] Skip waiting');
+        return self.skipWaiting();
+      })
+      .catch((error) => {
+        console.error('[SW] Installation failed:', error);
+      })
   );
 });
 
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating new service worker');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((cacheName) => cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE)
-          .map((cacheName) => caches.delete(cacheName))
+          .map((cacheName) => {
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log('[SW] Claiming clients');
+      return self.clients.claim();
+    })
   );
 });
 
