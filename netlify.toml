@@ -1,7 +1,7 @@
 # Netlify configuration for PadelBrain PWA
 [build]
-  command = "npm run build:web"
-  publish = "web-build"
+  command = "npx expo export --platform web"
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
