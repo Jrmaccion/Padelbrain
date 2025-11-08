@@ -25,7 +25,8 @@
       "Bash(keytool -list:*)",
       "Read(//c/Users/jaime/**)",
       "Bash(cp:*)",
-      "Bash(npm run verify:pwa:*)"
+      "Bash(npm run verify:pwa:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
