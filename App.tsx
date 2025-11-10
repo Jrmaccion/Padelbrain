@@ -24,14 +24,7 @@ export default function App() {
       try {
         // Load active user from storage
         await loadActiveUser();
-
-        // If there's an active user, load their data
-        if (activeUser) {
-          await setDataUser(activeUser.id);
-          logger.info('App initialized with active user', { userId: activeUser.id });
-        } else {
-          logger.info('App initialized without active user');
-        }
+        logger.info('App initialization complete');
       } catch (error) {
         logger.error('Failed to initialize app', error as Error);
       } finally {
@@ -40,16 +33,22 @@ export default function App() {
     };
 
     initialize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-initialize data store when active user changes
+  // Load user data when active user changes
   useEffect(() => {
     if (!isInitializing && activeUser) {
-      setDataUser(activeUser.id).catch((error) => {
-        logger.error('Failed to load user data', error as Error);
-      });
+      setDataUser(activeUser.id)
+        .then(() => {
+          logger.info('User data loaded', { userId: activeUser.id });
+        })
+        .catch((error) => {
+          logger.error('Failed to load user data', error as Error);
+        });
     }
-  }, [activeUser?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeUser?.id, isInitializing]);
 
   if (isInitializing) {
     return (
