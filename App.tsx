@@ -4,6 +4,10 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { colors } from './src/constants/colors';
 import { ErrorBoundary } from './src/components/common/ErrorBoundary';
 import PWAInstallPrompt from './src/components/common/PWAInstallPrompt';
+import { initSentry } from './src/services/sentry';
+
+// Initialize Sentry as early as possible
+initSentry();
 
 export default function App() {
   return (

@@ -12,10 +12,15 @@
     "prebuild": "expo prebuild",
     "prebuild:clean": "expo prebuild --clean",
     "typecheck": "tsc --noEmit",
-    "lint": "echo \"ESLint no configurado aún\" && exit 0",
-    "format": "echo \"Prettier no configurado aún\" && exit 0",
-    "test": "echo \"Jest no configurado aún\" && exit 0",
-    "validate": "npm run typecheck",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json}\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "validate": "npm run typecheck && npm run lint && npm run test",
+    "prepare": "husky",
     "clean": "powershell -NoProfile -Command \"if (Test-Path node_modules) { Remove-Item node_modules -Recurse -Force }; if (Test-Path ios) { Remove-Item ios -Recurse -Force }; if (Test-Path android) { Remove-Item android -Recurse -Force }; npm install\"",
     "postinstall": "patch-package",
     "build:web": "expo export --platform web",
@@ -40,6 +45,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "5.0.1",
     "@react-native-voice/voice": "^3.2.4",
+    "@sentry/react-native": "~7.2.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "expo": "^54.0.13",
     "expo-build-properties": "^1.0.9",
@@ -57,18 +63,41 @@
     "react-native-safe-area-context": "^5.6.1",
     "react-native-web": "^0.21.0",
     "uuid": "^9.0.1",
+    "zod": "^3.25.76",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@babel/core": "^7.23.0",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
     "electron": "^33.4.1",
     "electron-builder": "^26.1.0",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "husky": "^9.1.7",
+    "jest": "^30.2.0",
+    "jest-expo": "^54.0.13",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
     "typescript": "^5.3.3"
   },
   "build": {
     "extends": "./electron-builder.json"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,jsx,json,md}": [
+      "prettier --write"
+    ]
   }
 }

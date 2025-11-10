@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Match, Training } from '@/types';
+import { logger } from '@/services/logger';
 
 interface DataState {
   // Data
@@ -44,7 +45,7 @@ const withErrorHandling = async <T,>(
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     setError(message);
-    console.error('Store error:', error);
+    logger.error('Store error', error as Error);
     return null;
   }
 };
@@ -74,7 +75,7 @@ export const useDataStore = create<DataState>()(
                   set({ matches: legacyMatches });
                   await AsyncStorage.removeItem('matches');
                 } catch (parseError) {
-                  console.error('Failed to migrate legacy matches:', parseError);
+                  logger.error('Failed to migrate legacy matches', parseError as Error);
                 }
               }
             }
@@ -141,7 +142,7 @@ export const useDataStore = create<DataState>()(
                   set({ trainings: legacyTrainings });
                   await AsyncStorage.removeItem('trainings');
                 } catch (parseError) {
-                  console.error('Failed to migrate legacy trainings:', parseError);
+                  logger.error('Failed to migrate legacy trainings', parseError as Error);
                 }
               }
             }

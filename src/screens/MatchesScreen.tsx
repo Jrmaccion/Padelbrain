@@ -10,6 +10,7 @@ import { useResponsive } from '@/constants/layout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import SearchBar from '@/components/common/SearchBar';
 import FilterButton, { FilterOption } from '@/components/common/FilterButton';
+import { SkeletonList } from '@/components/common/Skeleton';
 
 type NamedStyles<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
 
@@ -178,12 +179,14 @@ export default function MatchesScreen() {
   const losses = items.filter((m) => m.result?.outcome === 'lost').length;
   const winRate = items.length > 0 ? Math.round((wins / items.length) * 100) : 0;
 
-  // Show loading spinner on initial load
+  // Show loading skeleton on initial load
   if (isLoadingMatches && items.length === 0) {
     return (
       <View style={styles.container}>
         <Header title="Partidos" />
-        <LoadingSpinner message="Cargando partidos..." />
+        <View style={styles.content}>
+          <SkeletonList count={5} />
+        </View>
       </View>
     );
   }
