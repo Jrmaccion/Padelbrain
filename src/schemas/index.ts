@@ -9,3 +9,4 @@ export * from './common';
 export * from './match';
 export * from './training';
 export * from './user';
+export * from './player';

@@ -5,12 +5,13 @@ import TrainingsScreen from '@/screens/TrainingsScreen';
 import MatchesScreen from '@/screens/MatchesScreen';
 import StatsScreen from '@/screens/StatsScreen';
 import ReportsScreen from '@/screens/ReportsScreen';
+import PlayersScreen from '@/screens/PlayersScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { useResponsive } from '@/constants/layout';
 import Tooltip from '@/components/common/Tooltip';
 import Badge from '@/components/common/Badge';
 
-type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'Reports' | 'Profile';
+type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'Players' | 'Reports' | 'Profile';
 
 interface Navigation {
   navigate: (route: string) => void;
@@ -29,6 +30,7 @@ const tabs: TabConfig[] = [
   { id: 'Trainings', label: 'Entrenar', icon: '🏃', tooltip: 'Entrenamientos' },
   { id: 'Matches', label: 'Partidos', icon: '🎾', tooltip: 'Partidos' },
   { id: 'Stats', label: 'Stats', icon: '📊', tooltip: 'Estadísticas', badgeKey: 'statsAlerts' },
+  { id: 'Players', label: 'Jugadores', icon: '👥', tooltip: 'Gestión de Jugadores' },
   { id: 'Reports', label: 'Informes', icon: '🧾', tooltip: 'Exportar/Informes' },
   { id: 'Profile', label: 'Perfil', icon: '👤', tooltip: 'Mi Perfil' },
 ];
@@ -41,7 +43,7 @@ export default function AppNavigator() {
   // Estado de ejemplo para badges (conéctalo a tu store si lo tienes)
   const [statsAlerts] = useState(0);
 
-  // Atajos de teclado (web): 1..6 seleccionan la pestaña
+  // Atajos de teclado (web): 1..7 seleccionan la pestaña
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const handler = (e: KeyboardEvent) => {
@@ -50,8 +52,9 @@ export default function AppNavigator() {
         '2': 'Trainings',
         '3': 'Matches',
         '4': 'Stats',
-        '5': 'Reports',
-        '6': 'Profile',
+        '5': 'Players',
+        '6': 'Reports',
+        '7': 'Profile',
       };
       if (map[e.key]) setRoute(map[e.key]);
     };
@@ -76,6 +79,8 @@ export default function AppNavigator() {
         return <MatchesScreen />;
       case 'Stats':
         return <StatsScreen />;
+      case 'Players':
+        return <PlayersScreen />;
       case 'Reports':
         return <ReportsScreen />;
       case 'Profile':
