@@ -5,7 +5,8 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4 } from 'react-native-get-random-values';
+import 'react-native-get-random-values'; // Polyfill for crypto.getRandomValues()
+import { v4 as uuidv4 } from 'uuid';
 import { UserProfile, DataConflict, MergeStrategy, ImportResult } from '@/types/user';
 import { Match, Training } from '@/types';
 import { userProfileSchema } from '@/schemas';
