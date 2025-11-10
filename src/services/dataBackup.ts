@@ -6,7 +6,6 @@
  */
 
 import { Platform } from 'react-native';
-import * as Sharing from 'expo-sharing';
 import { Match, Training } from '@/types';
 import { matchSchema, trainingSchema } from '@/schemas';
 import { logger } from './logger';

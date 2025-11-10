@@ -95,7 +95,7 @@ export default function DraftManager({ onLoadDraft }: DraftManagerProps) {
   const getCompletionPercentage = (draft: Draft): number => {
     const data = draft.data as any;
     let filled = 0;
-    let total = 10;
+    const total = 10;
 
     if (data.date) filled++;
     if (data.location) filled++;

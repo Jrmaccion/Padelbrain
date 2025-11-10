@@ -4,7 +4,7 @@ import { logger } from '@/services/logger';
 
 interface Props {
   children: ReactNode;
-  fallback?: (error: Error, resetError: () => void) => ReactNode;
+  fallback?: (_error: Error, _resetError: () => void) => ReactNode;
 }
 
 interface State {

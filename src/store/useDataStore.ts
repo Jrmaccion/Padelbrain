@@ -19,15 +19,15 @@ interface DataState {
 
   // Match actions
   loadMatches: () => Promise<void>;
-  addMatch: (match: Match) => Promise<void>;
-  updateMatch: (id: string, partial: Partial<Match>) => Promise<void>;
-  removeMatch: (id: string) => Promise<void>;
+  addMatch: (_match: Match) => Promise<void>;
+  updateMatch: (_id: string, _partial: Partial<Match>) => Promise<void>;
+  removeMatch: (_id: string) => Promise<void>;
 
   // Training actions
   loadTrainings: () => Promise<void>;
-  addTraining: (training: Training) => Promise<void>;
-  updateTraining: (id: string, partial: Partial<Training>) => Promise<void>;
-  removeTraining: (id: string) => Promise<void>;
+  addTraining: (_training: Training) => Promise<void>;
+  updateTraining: (_id: string, _partial: Partial<Training>) => Promise<void>;
+  removeTraining: (_id: string) => Promise<void>;
 
   // Utility
   clearErrors: () => void;
@@ -37,7 +37,7 @@ interface DataState {
 // Helper to handle async operations with error handling
 const withErrorHandling = async <T,>(
   fn: () => Promise<T>,
-  setError: (error: string | null) => void
+  setError: (_error: string | null) => void
 ): Promise<T | null> => {
   try {
     setError(null);

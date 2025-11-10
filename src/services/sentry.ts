@@ -18,6 +18,7 @@ const IS_DEV = __DEV__;
  */
 export function initSentry(): void {
   if (!SENTRY_DSN) {
+    // eslint-disable-next-line no-console
     console.warn(
       'Sentry DSN not configured. Set SENTRY_DSN environment variable to enable error tracking.'
     );
@@ -33,6 +34,7 @@ export function initSentry(): void {
     beforeSend(event) {
       // Don't send events in development
       if (IS_DEV) {
+        // eslint-disable-next-line no-console
         console.log('Sentry event (not sent in dev):', event);
         return null;
       }
@@ -55,8 +57,9 @@ export function initSentry(): void {
 /**
  * Capture an exception and send to Sentry
  */
-export function captureException(error: Error, context?: Record<string, any>): void {
+export function captureException(error: Error, context?: Record<string, unknown>): void {
   if (IS_DEV) {
+    // eslint-disable-next-line no-console
     console.error('[Sentry] Exception:', error, context);
   }
 
@@ -75,6 +78,7 @@ export function captureMessage(
   level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info'
 ): void {
   if (IS_DEV) {
+    // eslint-disable-next-line no-console
     console.log(`[Sentry] Message (${level}):`, message);
   }
 
@@ -102,7 +106,7 @@ export function addBreadcrumb(
   message: string,
   category: string,
   level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 ): void {
   Sentry.addBreadcrumb({
     message,

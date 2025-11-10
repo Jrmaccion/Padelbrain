@@ -51,11 +51,13 @@ module.exports = [
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
 
       // General
+      'no-unused-vars': 'off', // Use @typescript-eslint/no-unused-vars instead
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'warn',
       'no-var': 'error',

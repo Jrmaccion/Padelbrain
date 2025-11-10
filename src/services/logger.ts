@@ -10,7 +10,7 @@ import { captureException, captureMessage, addBreadcrumb } from './sentry';
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -28,6 +28,7 @@ class Logger {
    */
   debug(message: string, context?: LogContext): void {
     if (this.isDev) {
+      // eslint-disable-next-line no-console
       console.log(`[DEBUG] ${message}`, context || '');
     }
 
@@ -39,6 +40,7 @@ class Logger {
    */
   info(message: string, context?: LogContext): void {
     if (this.isDev) {
+      // eslint-disable-next-line no-console
       console.log(`[INFO] ${message}`, context || '');
     }
 
