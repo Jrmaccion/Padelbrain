@@ -7,18 +7,22 @@
 
 import { Platform } from 'react-native';
 import { Match, Training } from '@/types';
-import { matchSchema, trainingSchema } from '@/schemas';
+import { UserProfile, SyncMetadata } from '@/types/user';
+import { matchSchema, trainingSchema, userProfileSchema, syncMetadataSchema } from '@/schemas';
 import { logger } from './logger';
+import { getDeviceId } from './userManager';
 import { z } from 'zod';
 
 export interface BackupData {
   version: string;
   exportDate: string;
+  user: UserProfile;
+  sync: SyncMetadata;
   matches: Match[];
   trainings: Training[];
 }
 
-const BACKUP_VERSION = '1.0.0';
+const BACKUP_VERSION = '2.0.0';
 
 /**
  * Schema for validating backup data structure
@@ -26,6 +30,8 @@ const BACKUP_VERSION = '1.0.0';
 const backupDataSchema = z.object({
   version: z.string(),
   exportDate: z.string().datetime(),
+  user: userProfileSchema,
+  sync: syncMetadataSchema,
   matches: z.array(matchSchema),
   trainings: z.array(trainingSchema),
 });
@@ -34,19 +40,40 @@ const backupDataSchema = z.object({
  * Export all data to JSON format
  */
 export async function exportData(
+  user: UserProfile,
   matches: Match[],
   trainings: Training[]
 ): Promise<BackupData> {
+  const deviceId = await getDeviceId();
+  const exportDate = new Date().toISOString();
+
   const backupData: BackupData = {
     version: BACKUP_VERSION,
-    exportDate: new Date().toISOString(),
+    exportDate,
+    user: {
+      ...user,
+      lastSyncAt: exportDate,
+      deviceId,
+    },
+    sync: {
+      version: BACKUP_VERSION,
+      exportDate,
+      deviceId,
+      userId: user.id,
+      dataCount: {
+        matches: matches.length,
+        trainings: trainings.length,
+      },
+    },
     matches,
     trainings,
   };
 
   logger.info('Data exported', {
+    userId: user.id,
     matchCount: matches.length,
     trainingCount: trainings.length,
+    deviceId,
   });
 
   return backupData;
@@ -56,13 +83,14 @@ export async function exportData(
  * Download exported data as JSON file (web only for now)
  */
 export async function downloadBackup(
+  user: UserProfile,
   matches: Match[],
   trainings: Training[]
 ): Promise<void> {
   try {
-    const backupData = await exportData(matches, trainings);
+    const backupData = await exportData(user, matches, trainings);
     const jsonString = JSON.stringify(backupData, null, 2);
-    const filename = `padelbrain-backup-${new Date().toISOString().split('T')[0]}.json`;
+    const filename = `${user.name.replace(/\s+/g, '-')}-backup-${new Date().toISOString().split('T')[0]}.json`;
 
     if (Platform.OS === 'web') {
       // Web: Create blob and trigger download
@@ -81,7 +109,9 @@ export async function downloadBackup(
       // Native: For now, return the JSON string
       // TODO: Implement native file sharing with expo-file-system
       logger.warn('Native backup download not yet implemented');
-      throw new Error('Export is currently only available on web. Use the PWA version to export your data.');
+      throw new Error(
+        'Export is currently only available on web. Use the PWA version to export your data.'
+      );
     }
   } catch (error) {
     logger.error('Failed to download backup', error as Error);
@@ -160,10 +190,12 @@ export async function uploadAndRestoreWeb(file: File): Promise<BackupData> {
 export function getBackupSummary(backup: BackupData): string {
   const exportDate = new Date(backup.exportDate).toLocaleDateString();
   return `
-Backup from: ${exportDate}
-Version: ${backup.version}
-Matches: ${backup.matches.length}
-Trainings: ${backup.trainings.length}
+Usuario: ${backup.user.name}
+${backup.user.email ? `Email: ${backup.user.email}` : ''}
+Fecha de exportación: ${exportDate}
+Dispositivo: ${backup.sync.deviceId.substring(0, 8)}...
+Partidos: ${backup.matches.length}
+Entrenamientos: ${backup.trainings.length}
   `.trim();
 }
 

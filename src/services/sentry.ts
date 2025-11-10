@@ -18,7 +18,6 @@ const IS_DEV = __DEV__;
  */
 export function initSentry(): void {
   if (!SENTRY_DSN) {
-    // eslint-disable-next-line no-console
     console.warn(
       'Sentry DSN not configured. Set SENTRY_DSN environment variable to enable error tracking.'
     );
@@ -59,7 +58,6 @@ export function initSentry(): void {
  */
 export function captureException(error: Error, context?: Record<string, unknown>): void {
   if (IS_DEV) {
-    // eslint-disable-next-line no-console
     console.error('[Sentry] Exception:', error, context);
   }
 

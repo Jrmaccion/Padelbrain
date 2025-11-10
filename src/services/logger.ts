@@ -95,6 +95,13 @@ class Logger {
   }
 
   /**
+   * Alias for logAction for convenience
+   */
+  action(action: string, details?: LogContext): void {
+    this.logAction(action, details);
+  }
+
+  /**
    * Log navigation events
    */
   logNavigation(screen: string, params?: LogContext): void {

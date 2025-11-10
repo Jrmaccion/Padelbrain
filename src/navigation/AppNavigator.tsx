@@ -4,12 +4,13 @@ import HomeScreen from '@/screens/HomeScreen';
 import TrainingsScreen from '@/screens/TrainingsScreen';
 import MatchesScreen from '@/screens/MatchesScreen';
 import StatsScreen from '@/screens/StatsScreen';
+import ReportsScreen from '@/screens/ReportsScreen';
+import { ProfileScreen } from '@/screens/ProfileScreen';
 import { useResponsive } from '@/constants/layout';
 import Tooltip from '@/components/common/Tooltip';
 import Badge from '@/components/common/Badge';
-import ReportsScreen from '@/screens/ReportsScreen';
 
-type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'Reports';
+type Route = 'Home' | 'Trainings' | 'Matches' | 'Stats' | 'Reports' | 'Profile';
 
 interface Navigation {
   navigate: (route: string) => void;
@@ -24,11 +25,12 @@ interface TabConfig {
 }
 
 const tabs: TabConfig[] = [
-  { id: 'Home',      label: 'Inicio',     icon: '🏠', tooltip: 'Inicio' },
-  { id: 'Trainings', label: 'Entrenar',   icon: '🏃', tooltip: 'Entrenamientos' },
-  { id: 'Matches',   label: 'Partidos',   icon: '🎾', tooltip: 'Partidos' },
-  { id: 'Stats',     label: 'Stats',      icon: '📊', tooltip: 'Estadísticas', badgeKey: 'statsAlerts' },
-  { id: 'Reports',   label: 'Informes',   icon: '🧾', tooltip: 'Exportar/Informes' },
+  { id: 'Home', label: 'Inicio', icon: '🏠', tooltip: 'Inicio' },
+  { id: 'Trainings', label: 'Entrenar', icon: '🏃', tooltip: 'Entrenamientos' },
+  { id: 'Matches', label: 'Partidos', icon: '🎾', tooltip: 'Partidos' },
+  { id: 'Stats', label: 'Stats', icon: '📊', tooltip: 'Estadísticas', badgeKey: 'statsAlerts' },
+  { id: 'Reports', label: 'Informes', icon: '🧾', tooltip: 'Exportar/Informes' },
+  { id: 'Profile', label: 'Perfil', icon: '👤', tooltip: 'Mi Perfil' },
 ];
 
 export default function AppNavigator() {
@@ -37,14 +39,19 @@ export default function AppNavigator() {
   const isMobile = deviceType === 'mobile';
 
   // Estado de ejemplo para badges (conéctalo a tu store si lo tienes)
-  const [statsAlerts, setStatsAlerts] = useState(0);
+  const [statsAlerts] = useState(0);
 
-  // Atajos de teclado (web): 1..5 seleccionan la pestaña
+  // Atajos de teclado (web): 1..6 seleccionan la pestaña
   useEffect(() => {
     if (Platform.OS !== 'web') return;
     const handler = (e: KeyboardEvent) => {
       const map: Record<string, Route> = {
-        '1': 'Home', '2': 'Trainings', '3': 'Matches', '4': 'Stats', '5': 'Reports'
+        '1': 'Home',
+        '2': 'Trainings',
+        '3': 'Matches',
+        '4': 'Stats',
+        '5': 'Reports',
+        '6': 'Profile',
       };
       if (map[e.key]) setRoute(map[e.key]);
     };
@@ -61,12 +68,20 @@ export default function AppNavigator() {
   const renderScreen = () => {
     const nav: Navigation = { navigate: (r: string) => setRoute(r as Route) };
     switch (route) {
-      case 'Home':      return <HomeScreen navigation={nav} />;
-      case 'Trainings': return <TrainingsScreen />;
-      case 'Matches':   return <MatchesScreen />;
-      case 'Stats':     return <StatsScreen />;
-      case 'Reports':   return <ReportsScreen />;
-      default:          return <HomeScreen navigation={nav} />;
+      case 'Home':
+        return <HomeScreen navigation={nav} />;
+      case 'Trainings':
+        return <TrainingsScreen />;
+      case 'Matches':
+        return <MatchesScreen />;
+      case 'Stats':
+        return <StatsScreen />;
+      case 'Reports':
+        return <ReportsScreen />;
+      case 'Profile':
+        return <ProfileScreen />;
+      default:
+        return <HomeScreen navigation={nav} />;
     }
   };
 
@@ -74,7 +89,7 @@ export default function AppNavigator() {
     tab,
     active,
     variant,
-    onPress
+    onPress,
   }: {
     tab: TabConfig;
     active: boolean;
@@ -82,24 +97,35 @@ export default function AppNavigator() {
     onPress: () => void;
   }) => {
     const iconStyle =
-      variant === 'bottom' ? styles.tabIcon :
-      variant === 'side'   ? styles.sideTabIcon : styles.topTabIcon;
+      variant === 'bottom'
+        ? styles.tabIcon
+        : variant === 'side'
+          ? styles.sideTabIcon
+          : styles.topTabIcon;
 
     const baseStyle =
-      variant === 'bottom' ? styles.tab :
-      variant === 'side'   ? styles.sideTab : styles.topTab;
+      variant === 'bottom' ? styles.tab : variant === 'side' ? styles.sideTab : styles.topTab;
 
     const activeStyle =
-      variant === 'bottom' ? styles.tabActive :
-      variant === 'side'   ? styles.sideTabActive : styles.topTabActive;
+      variant === 'bottom'
+        ? styles.tabActive
+        : variant === 'side'
+          ? styles.sideTabActive
+          : styles.topTabActive;
 
     const labelStyle =
-      variant === 'bottom' ? styles.tabLabel :
-      variant === 'side'   ? styles.sideTabLabel : styles.topTabLabel;
+      variant === 'bottom'
+        ? styles.tabLabel
+        : variant === 'side'
+          ? styles.sideTabLabel
+          : styles.topTabLabel;
 
     const labelActiveStyle =
-      variant === 'bottom' ? styles.tabLabelActive :
-      variant === 'side'   ? styles.sideTabLabelActive : styles.topTabLabelActive;
+      variant === 'bottom'
+        ? styles.tabLabelActive
+        : variant === 'side'
+          ? styles.sideTabLabelActive
+          : styles.topTabLabelActive;
 
     const badgeValue = getBadgeValue(tab.badgeKey);
 
@@ -115,9 +141,7 @@ export default function AppNavigator() {
         <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
           <Text style={iconStyle}>{tab.icon}</Text>
           {/* Badge en esquina superior derecha del icono */}
-          {!!badgeValue && badgeValue > 0 && (
-            <Badge value={badgeValue} style={styles.iconBadge} />
-          )}
+          {!!badgeValue && badgeValue > 0 && <Badge value={badgeValue} style={styles.iconBadge} />}
         </View>
         <Text style={[labelStyle, active && labelActiveStyle]}>{tab.label}</Text>
       </TouchableOpacity>
@@ -126,7 +150,11 @@ export default function AppNavigator() {
     // Tooltip sólo en web y para side/top
     if (Platform.OS === 'web' && (variant === 'side' || variant === 'top')) {
       return (
-        <Tooltip key={tab.id} text={tab.tooltip || tab.label} side={variant === 'side' ? 'right' : 'bottom'}>
+        <Tooltip
+          key={tab.id}
+          text={tab.tooltip || tab.label}
+          side={variant === 'side' ? 'right' : 'bottom'}
+        >
           {Inner}
         </Tooltip>
       );
@@ -143,7 +171,7 @@ export default function AppNavigator() {
       <View style={styles.container}>
         <View style={styles.content}>{renderScreen()}</View>
         <View style={styles.tabBar}>
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <NavItem
               key={tab.id}
               tab={tab}
@@ -164,7 +192,7 @@ export default function AppNavigator() {
         <View style={styles.topBar}>
           <Text style={styles.brand}>PadelBrain</Text>
           <View style={styles.topTabs}>
-            {tabs.map(tab => (
+            {tabs.map((tab) => (
               <NavItem
                 key={tab.id}
                 tab={tab}
@@ -182,7 +210,7 @@ export default function AppNavigator() {
               maxWidth: responsiveLayout.getMaxWidth(),
               alignSelf: 'center',
               width: '100%',
-              flex: 1
+              flex: 1,
             }}
           >
             {renderScreen()}
@@ -198,7 +226,7 @@ export default function AppNavigator() {
       <View style={styles.row}>
         <View style={styles.sideBar}>
           <Text style={styles.brandSide}>PadelBrain</Text>
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <NavItem
               key={tab.id}
               tab={tab}
@@ -214,7 +242,7 @@ export default function AppNavigator() {
               maxWidth: responsiveLayout.getMaxWidth(),
               alignSelf: 'center',
               width: '100%',
-              flex: 1
+              flex: 1,
             }}
           >
             {renderScreen()}
@@ -234,10 +262,15 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1, borderTopColor: '#E2E8F0',
-    paddingBottom: 8, paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    paddingBottom: 8,
+    paddingTop: 8,
     elevation: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8 },
   tabActive: { backgroundColor: '#EFF6FF', borderRadius: 8, marginHorizontal: 4 },
@@ -250,16 +283,26 @@ const styles = StyleSheet.create({
   sideBar: {
     width: 232,
     backgroundColor: '#FFFFFF',
-    borderRightWidth: 1, borderRightColor: '#E2E8F0',
-    paddingVertical: 12, paddingHorizontal: 10, gap: 6,
+    borderRightWidth: 1,
+    borderRightColor: '#E2E8F0',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    gap: 6,
   },
   brandSide: {
-    fontSize: 16, fontWeight: '800', color: '#0F172A',
-    marginBottom: 10, paddingHorizontal: 6,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 10,
+    paddingHorizontal: 6,
   },
   sideTab: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingVertical: 10, paddingHorizontal: 12, borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
   },
   sideTabActive: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE' },
   sideTabIcon: { fontSize: 20 },
@@ -269,22 +312,30 @@ const styles = StyleSheet.create({
 
   iconBadge: {
     position: 'absolute',
-    right: -6, top: -4,
+    right: -6,
+    top: -4,
   },
 
   // top bar
   topBar: {
     height: 56,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1, borderBottomColor: '#E2E8F0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
     paddingHorizontal: 12,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   brand: { fontSize: 18, fontWeight: '800', color: '#0F172A' },
   topTabs: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   topTab: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
   },
   topTabActive: { backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE' },
   topTabIcon: { fontSize: 18 },

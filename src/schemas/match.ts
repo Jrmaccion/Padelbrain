@@ -2,32 +2,53 @@ import { z } from 'zod';
 import { baseItemSchema, rating1to5Schema } from './common';
 
 /**
- * Validation schema for match analysis
- */
-const analysisSchema = z.object({
-  strengths: z.string().max(500, 'Strengths too long').optional(),
-  weaknesses: z.string().max(500, 'Weaknesses too long').optional(),
-  tactics: z.string().max(500, 'Tactics too long').optional(),
-  technical: rating1to5Schema.optional(),
-  tactical: rating1to5Schema.optional(),
-  physical: rating1to5Schema.optional(),
-  mental: rating1to5Schema.optional(),
-});
-
-/**
  * Full validation schema for Match type
  */
 export const matchSchema = baseItemSchema.extend({
   tournament: z.string().max(100, 'Tournament name too long').optional(),
+  category: z.string().max(100, 'Category too long').optional(),
+  round: z.string().max(100, 'Round too long').optional(),
+  courtType: z.enum(['interior', 'exterior']).optional(),
   opponents: z
-    .array(z.string().min(1, 'Opponent name cannot be empty'))
-    .min(1, 'At least one opponent is required')
-    .max(4, 'Maximum 4 opponents allowed'),
-  result: z.enum(['won', 'lost']),
-  score: z.string().max(50, 'Score too long').optional(),
+    .object({
+      right: z.string().max(100).optional(),
+      left: z.string().max(100).optional(),
+    })
+    .optional(),
+  result: z
+    .object({
+      outcome: z.enum(['won', 'lost']),
+      score: z.string().max(50).optional(),
+      durationMin: z.number().optional(),
+    })
+    .optional(),
   partner: z.string().max(100, 'Partner name too long').optional(),
   position: z.enum(['right', 'left']).optional(),
-  analysis: analysisSchema.optional(),
+  plan: z.string().max(1000).optional(),
+  strengths: z.array(z.string()).optional(),
+  weaknesses: z.array(z.string()).optional(),
+  analysis: z
+    .object({
+      attack: z.string().max(1000).optional(),
+      defense: z.string().max(1000).optional(),
+      transitions: z.string().max(1000).optional(),
+    })
+    .optional(),
+  ratings: z
+    .object({
+      technical: rating1to5Schema.optional(),
+      tactical: rating1to5Schema.optional(),
+      mental: rating1to5Schema.optional(),
+      physical: rating1to5Schema.optional(),
+    })
+    .optional(),
+  reflections: z
+    .object({
+      learned: z.string().max(1000).optional(),
+      diffNextTime: z.string().max(1000).optional(),
+    })
+    .optional(),
+  keywords: z.array(z.string()).optional(),
 });
 
 /**
